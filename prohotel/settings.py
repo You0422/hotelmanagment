@@ -38,12 +38,12 @@ ALLOWED_HOSTS = [h.strip() for h in _hosts.split(',') if h.strip()] if _hosts el
 _csrf_origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').strip()
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins.split(',') if o.strip()]
 
-# Render fournit automatiquement l'adresse publique du service
-_render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-if _render_host:
-    if ALLOWED_HOSTS != ['*'] and _render_host not in ALLOWED_HOSTS:
-        ALLOWED_HOSTS.append(_render_host)
-    CSRF_TRUSTED_ORIGINS.append(f'https://{_render_host}')
+# Render et Railway fournissent automatiquement l'adresse publique du service
+_hote_plateforme = os.environ.get('RENDER_EXTERNAL_HOSTNAME') or os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if _hote_plateforme:
+    if ALLOWED_HOSTS != ['*'] and _hote_plateforme not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_hote_plateforme)
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_hote_plateforme}')
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True

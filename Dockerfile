@@ -5,29 +5,19 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive \
-    GDAL_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgdal.so.32 \
-    GEOS_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libgeos_c.so.1
+    PIP_NO_CACHE_DIR=1
 
-# Installation des dépendances système
+# Dépendances système : PostgreSQL et les bibliothèques nécessaires aux PDF
+# (reportlab, svglib et pycairo pour les factures, reçus et fiches client)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc g++ \
+    gcc \
     build-essential \
     libpq-dev \
     postgresql-client \
-    gdal-bin \
-    libgdal-dev \
-    python3-gdal \
-    libgeos-dev \
-    libproj-dev \
     libcairo2-dev \
+    libffi-dev \
     pkg-config \
     python3-dev \
-    libgobject-2.0-0 \
-    libglib2.0-0 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libgdk-pixbuf-2.0-0 \
-    libffi-dev \
     shared-mime-info \
     && rm -rf /var/lib/apt/lists/*
 
@@ -45,11 +35,11 @@ RUN pip install --upgrade pip && \
 COPY . .
 
 # Création des répertoires nécessaires
-RUN mkdir -p logs media static
+RUN mkdir -p logs media staticfiles
 
-# Exposition du port Django
+# Port de l'application
 EXPOSE 8080
 
 # Démarrage : tables à jour, fichiers CSS/JS préparés, puis serveur gunicorn
-# PORT est fourni par l'hébergeur (Render, Railway...), 8080 par défaut
+# PORT est fourni par l'hébergeur (Railway, Render...), 8080 par défaut
 CMD ["sh", "-c", "python manage.py migrate --no-input && python manage.py collectstatic --no-input && gunicorn prohotel.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers ${WEB_CONCURRENCY:-3} --timeout 120 --access-logfile -"]
