@@ -50,5 +50,6 @@ RUN mkdir -p logs media static
 # Exposition du port Django
 EXPOSE 8080
 
-# Commande par défaut (dev uniquement)
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8080"]
+# Démarrage : tables à jour, fichiers CSS/JS préparés, puis serveur gunicorn
+# PORT est fourni par l'hébergeur (Render, Railway...), 8080 par défaut
+CMD ["sh", "-c", "python manage.py migrate --no-input && python manage.py collectstatic --no-input && gunicorn prohotel.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers ${WEB_CONCURRENCY:-3} --timeout 120 --access-logfile -"]
