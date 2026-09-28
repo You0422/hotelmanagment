@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Facture {{ numero }}</title>
+  <style>
+    @page { size: A4; margin: 7mm 11mm; }
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 8pt; line-height: 1.15; color: #1e293b; }
+    p { margin: 0; padding: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { padding: 0; vertical-align: top; }
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .muted { color: #64748b; }
+    .hotel-name { font-size: 12pt; font-weight: bold; color: #1e3a8a; }
+    .doc-title { font-size: 16pt; font-weight: bold; color: #2563eb; }
+    .doc-num { font-size: 9pt; font-weight: bold; }
+    .copy { font-size: 7pt; color: #ffffff; background-color: #2563eb; padding: 2px 6px 1px 6px; }
+    .band td { background-color: #2563eb; font-size: 2pt; line-height: 2pt; }
+    .box-title { font-size: 7pt; font-weight: bold; color: #2563eb; padding: 4px 6px 2px 6px; background-color: #eff6ff; }
+    .box-body { padding: 3px 6px 4px 6px; background-color: #f8fafc; }
+    .items th { background-color: #1e293b; color: #ffffff; font-weight: bold; font-size: 7.5pt; padding: 4px 5px 3px 5px; text-align: left; }
+    .items td { padding: 3px 5px 2px 5px; border-bottom: 0.4pt solid #e2e8f0; }
+    .items .sub { font-size: 6.5pt; color: #64748b; }
+    .tot td { padding: 2px 6px 1px 6px; }
+    .tot .grand td { background-color: #2563eb; color: #ffffff; font-size: 10pt; font-weight: bold; padding: 4px 6px 3px 6px; }
+    .green { color: #16a34a; }
+    .red { color: #dc2626; }
+    .stamp-ok { color: #16a34a; border: 1.2pt solid #16a34a; font-size: 10pt; font-weight: bold; padding: 3px 8px 2px 8px; text-align: center; }
+    .stamp-due { color: #dc2626; border: 1.2pt solid #dc2626; font-size: 10pt; font-weight: bold; padding: 3px 8px 2px 8px; text-align: center; }
+    .pay td { padding: 1px 0; font-size: 7pt; color: #475569; }
+    .foot { font-size: 6.5pt; color: #64748b; text-align: center; padding-top: 3px; }
+    .cut td { border-bottom: 0.6pt dashed #94a3b8; font-size: 2pt; line-height: 2pt; }
+  </style>
+</head>
+<body>
+{# Deux exemplaires sur la même page : copie client puis copie hôtel #}
+{% for exemplaire in "12" %}
+  <table>
+    <tr>
+      {% if hotel.logo %}<td style="width:20mm;"><img src="{{ hotel.logo.path }}" style="height:16mm;"></td>{% endif %}
+      <td>
+        <p class="hotel-name">{{ hotel.nom_etablissement|default:"HotelManagment" }}</p>
+        {% if hotel.adresse %}<p class="muted">{{ hotel.adresse }}</p>{% endif %}
+        <p class="muted">{% if hotel.telephone %}Tél : {{ hotel.telephone }}{% endif %}{% if hotel.telephone and hotel.email %} · {% endif %}{% if hotel.email %}{{ hotel.email }}{% endif %}</p>
+        {% if hotel.ifu or hotel.rccm %}<p class="muted">{% if hotel.ifu %}IFU : {{ hotel.ifu }}{% endif %}{% if hotel.ifu and hotel.rccm %} · {% endif %}{% if hotel.rccm %}RCCM : {{ hotel.rccm }}{% endif %}</p>{% endif %}
+      </td>
+      <td class="right" style="width:62mm;">
+        <p class="doc-title">FACTURE</p>
+        <p class="doc-num">N° {{ numero }}</p>
+        <p class="muted">Date : {% now "d/m/Y" %}</p>
+        <p style="padding-top:2px;"><span class="copy">{% if forloop.first %}COPIE CLIENT{% else %}COPIE HÔTEL{% endif %}</span></p>
+      </td>
+    </tr>
+  </table>
+  <table class="band" style="margin-top:4px;"><tr><td>&nbsp;</td></tr></table>
+
+  <table style="margin-top:5px;">
+    <tr>
+      <td style="width:49%;">
+        <p class="box-title">FACTURÉ À</p>
+        <div class="box-body">
+          <p><b>{{ r.client.prenom }} {{ r.client.nom }}</b>{% if r.client.code_client %} <span class="muted">({{ r.client.code_client }})</span>{% endif %}</p>
+          {% if r.client.telephone %}<p>Tél : {{ r.client.telephone }}</p>{% endif %}
+          <p>{{ r.client.type_document }} : {{ r.client.numero_document }}</p>
+        </div>
+      </td>
+      <td style="width:2%;"></td>
+      <td style="width:49%;">
+        <p class="box-title">SÉJOUR</p>
+        <div class="box-body">
+          <p>Réservation <b>#{{ r.id }}</b> · Chambre <b>{{ r.chambre.numero_chambre }}</b> ({{ r.chambre.type_chambre }})</p>
+          <p>Du <b>{{ r.date_arrivee|date:"d/m/Y" }}</b> au <b>{{ r.date_depart|date:"d/m/Y" }}</b> — {{ nb_nuits }} nuit{{ nb_nuits|pluralize }}</p>
+          <p>Statut : {{ r.statut_reser }}</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <table class="items" style="margin-top:5px;">
+    <tr>
+      <th style="width:56%;">Désignation</th>
+      <th style="width:10%; text-align:center;">Qté</th>
+      <th style="width:16%; text-align:right;">P.U. (FCFA)</th>
+      <th style="width:18%; text-align:right;">Montant (FCFA)</th>
+    </tr>
+    {% for l in lignes %}
+    <tr>
+      <td>{{ l.libelle }}{% if l.detail %}<br><span class="sub">{{ l.detail }}</span>{% endif %}</td>
+      <td class="center">{{ l.qte }}</td>
+      <td class="right">{{ l.pu }}</td>
+      <td class="right"><b>{{ l.total }}</b></td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  <table style="margin-top:5px;">
+    <tr>
+      <td style="width:52%; padding-right:8px;">
+        {% if paiements %}
+        <p class="box-title">PAIEMENTS REÇUS</p>
+        <table class="pay">
+          {% for p in paiements|slice:":4" %}
+          <tr><td>{{ p.date|date:"d/m/Y" }} · {{ p.methode }}{% if p.reference %} ({{ p.reference }}){% endif %}</td><td class="right">{{ p.montant }} F</td></tr>
+          {% endfor %}
+          {% if paiements|length > 4 %}<tr><td colspan="2">+ {{ paiements|length|add:"-4" }} autre(s) paiement(s)</td></tr>{% endif %}
+        </table>
+        {% endif %}
+        <table style="margin-top:6px;"><tr>
+          <td style="width:45%;"><p class="{% if est_solde %}stamp-ok{% else %}stamp-due{% endif %}">{% if est_solde %}PAYÉE{% else %}SOLDE DÛ{% endif %}</p></td>
+          <td></td>
+        </tr></table>
+      </td>
+      <td style="width:48%;">
+        <table class="tot">
+          <tr><td class="muted">Hébergement</td><td class="right">{{ total_chambre }} F</td></tr>
+          <tr><td class="muted">Services</td><td class="right">{{ total_services }} F</td></tr>
+          <tr class="grand"><td>TOTAL</td><td class="right">{{ total_general }} FCFA</td></tr>
+          <tr><td class="muted">Montant payé</td><td class="right green"><b>{{ total_paye }} F</b></td></tr>
+          <tr><td class="muted">Reste à payer</td><td class="right {% if est_solde %}green{% else %}red{% endif %}"><b>{{ solde_du }} F</b></td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <table style="margin-top:8px;">
+    <tr>
+      <td class="muted" style="width:50%;">Signature du client</td>
+      <td class="muted right">Cachet et signature de l'établissement</td>
+    </tr>
+  </table>
+  <p class="foot" style="padding-top:14px;">Merci pour votre séjour !{% if hotel.numero_compte_bancaire %} · Compte bancaire : {{ hotel.numero_compte_bancaire }}{% endif %}</p>
+
+  {% if forloop.first %}<table class="cut" style="margin:6px 0 8px 0;"><tr><td>&nbsp;</td></tr></table>{% endif %}
+{% endfor %}
+</body>
+</html>

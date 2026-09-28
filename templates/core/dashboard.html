@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}Tableau de bord · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Tableau de Bord</h1>
+    <p class="page-subtitle">{% if is_admin %}Vue complète : exploitation, trésorerie et performance{% else %}Occupation, réservations et encaissements du jour{% endif %}</p>
+  </div>
+  <p class="page-date">{% now "d/m/Y" %}</p>
+</div>
+
+<div class="grid-4">
+  <div class="stat-card">
+    <div class="stat-icon tone-1">{% include "icons/home.html" with cls="icon-lg" %}</div>
+    <div>
+      <p class="stat-label">Taux d'occupation</p>
+      <p class="stat-value">{{ taux_occupation|floatformat:0 }}%</p>
+      <p class="stat-hint">{{ occupees }}/{{ total_rooms }} chambres occupées</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon tone-3">{% include "icons/hotel.html" with cls="icon-lg" %}</div>
+    <div>
+      <p class="stat-label">Chambres disponibles</p>
+      <p class="stat-value">{{ disponibles }}</p>
+      <p class="stat-hint">{{ en_maintenance }} en maintenance</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon tone-7">{% include "icons/dollar-sign.html" with cls="icon-lg" %}</div>
+    <div>
+      <p class="stat-label">Revenus aujourd'hui</p>
+      <p class="stat-value">{{ revenus_aujourdhui|floatformat:0 }} FCFA</p>
+      <p class="stat-hint">Paiements encaissés ce jour</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon tone-2">{% include "icons/calendar.html" with cls="icon-lg" %}</div>
+    <div>
+      <p class="stat-label">Arrivées aujourd'hui</p>
+      <p class="stat-value">{{ nb_arrivees }}</p>
+      <p class="stat-hint">{{ nb_departs }} départ{{ nb_departs|pluralize }} prévu{{ nb_departs|pluralize }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="gradient-card gradient-revenue">
+    <div>
+      <p class="g-label">Revenus du mois</p>
+      <p class="g-value">{{ revenus_mois|floatformat:0 }} FCFA</p>
+      <p class="g-hint">{% if is_admin %}Dépenses du mois : {{ depenses_mois|floatformat:0 }} FCFA{% else %}Total des paiements encaissés ce mois{% endif %}</p>
+    </div>
+    <div class="g-emoji">{% include "icons/trending-up.html" with cls="icon-xl" %}</div>
+  </div>
+  {% if is_admin %}
+  <div class="gradient-card {% if benefice_mois < 0 %}gradient-critical{% else %}gradient-good{% endif %}">
+    <div>
+      <p class="g-label">Bénéfice net du mois</p>
+      <p class="g-value">{{ benefice_mois|floatformat:0 }} FCFA</p>
+      <p class="g-hint">{% if benefice_mois < 0 %}Déficit : les dépenses dépassent les revenus{% else %}Revenus − dépenses du mois{% endif %}</p>
+    </div>
+    <div class="g-emoji">{% if benefice_mois < 0 %}{% include "icons/trending-down.html" with cls="icon-xl" %}{% else %}{% include "icons/wallet.html" with cls="icon-xl" %}{% endif %}</div>
+  </div>
+  {% else %}
+  <div class="gradient-card gradient-violet">
+    <div>
+      <p class="g-label">Séjours en cours</p>
+      <p class="g-value">{{ reservations_en_cours }}</p>
+      <p class="g-hint">{{ reservations_confirmees }} réservation{{ reservations_confirmees|pluralize }} confirmée{{ reservations_confirmees|pluralize }} · {{ total_clients }} client{{ total_clients|pluralize }}</p>
+    </div>
+    <div class="g-emoji">{% include "icons/bed.html" with cls="icon-xl" %}</div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid-lg-2">
+  {% if is_admin %}
+  <div class="panel-lg p-6">
+    <div class="chart-head">
+      <div>
+        <h2 class="panel-title">Revenus et Dépenses Mensuels</h2>
+        <p class="panel-hint">Évolution sur les 6 derniers mois (FCFA)</p>
+      </div>
+      <div class="chart-total"><p>Ce mois</p><p>{{ revenus_mois|floatformat:0 }} F</p></div>
+    </div>
+    <div class="chart-box"><canvas id="chartRevenus" aria-label="Revenus et dépenses mensuels" role="img"></canvas></div>
+  </div>
+  {% endif %}
+  <div class="panel-lg p-6">
+    <div class="chart-head">
+      <div>
+        <h2 class="panel-title">Taux d'Occupation</h2>
+        <p class="panel-hint">Part des nuitées occupées par mois</p>
+      </div>
+      <div class="chart-total"><p>Aujourd'hui</p><p>{{ taux_occupation|floatformat:0 }} %</p></div>
+    </div>
+    <div class="chart-box"><canvas id="chartOccupation" aria-label="Taux d'occupation mensuel" role="img"></canvas></div>
+  </div>
+  {% if not is_admin %}
+  {% include "core/partials/dashboard_types.html" %}
+  {% endif %}
+</div>
+
+{% if is_admin %}
+<div class="grid-lg-2">
+  {% include "core/partials/dashboard_types.html" %}
+  <div class="panel-lg p-6">
+    <h2 class="panel-title">Statut des Chambres</h2>
+    <p class="panel-hint">Répartition actuelle des {{ total_rooms }} chambre{{ total_rooms|pluralize }}</p>
+    {% if repartition_statuts %}
+    <div class="status-meter" role="img" aria-label="Répartition des chambres par statut">
+      {% for s in repartition_statuts %}
+      <span class="{% if s.statut_actuel == 'Libre' %}st-libre{% elif s.statut_actuel == 'Occupée' %}st-occupee{% elif s.statut_actuel == 'En maintenance' %}st-maintenance{% else %}st-hors{% endif %}" style="width: {% widthratio s.nb total_rooms 100 %}%; background: {% if s.statut_actuel == 'Libre' %}var(--status-good){% elif s.statut_actuel == 'Occupée' %}var(--series-1){% elif s.statut_actuel == 'En maintenance' %}var(--status-warning){% else %}var(--status-critical){% endif %};" title="{{ s.statut_actuel }} : {{ s.nb }}"></span>
+      {% endfor %}
+    </div>
+    <div class="status-list mt-4">
+      {% for s in repartition_statuts %}
+      <div class="status-row {% if s.statut_actuel == 'Libre' %}st-libre{% elif s.statut_actuel == 'Occupée' %}st-occupee{% elif s.statut_actuel == 'En maintenance' %}st-maintenance{% else %}st-hors{% endif %}">
+        <span class="status-row-left">
+          {% if s.statut_actuel == 'Libre' %}<span class="status-dot" style="background:var(--status-good)">{% include "icons/check.html" with cls="icon-sm" %}</span>
+          {% elif s.statut_actuel == 'Occupée' %}<span class="status-dot" style="background:var(--series-1)">{% include "icons/bed.html" with cls="icon-sm" %}</span>
+          {% elif s.statut_actuel == 'En maintenance' %}<span class="status-dot is-warning" style="background:var(--status-warning)">{% include "icons/wrench.html" with cls="icon-sm" %}</span>
+          {% else %}<span class="status-dot" style="background:var(--status-critical)">{% include "icons/x.html" with cls="icon-sm" %}</span>{% endif %}
+          {{ s.statut_actuel }}
+        </span>
+        <span class="legend-value"><strong>{{ s.nb }}</strong><small>{% widthratio s.nb total_rooms 100 %} %</small></span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">{% include "icons/hotel.html" with cls="icon-empty" %}<p>Aucune chambre enregistrée</p></div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="grid-lg-2">
+  <div class="panel overflow-hidden">
+    <div class="panel-head panel-head-border">
+      <h2 class="panel-title">Dernières réservations</h2>
+      <a href="{% url 'reservations_list' %}" class="link-more">Voir tout</a>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Client</th><th>Chambre</th><th>Entrée</th><th>Statut</th></tr></thead>
+        <tbody>
+          {% for r in dernieres_reservations %}
+          <tr>
+            <td class="t-strong">{{ r.client.prenom }} {{ r.client.nom }}</td>
+            <td>{{ r.chambre.numero_chambre }}</td>
+            <td>{{ r.date_arrivee|date:"d/m/Y" }}</td>
+            <td>{% include "core/partials/reservation_badge.html" with statut=r.statut_reser %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="empty"><p>Aucune réservation récente</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if is_admin %}
+  <div class="panel overflow-hidden">
+    <div class="panel-head panel-head-border">
+      <h2 class="panel-title">Dernières dépenses</h2>
+      <a href="{% url 'expenses_list' %}" class="link-more">Voir tout</a>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Catégorie</th><th class="t-right">Montant</th></tr></thead>
+        <tbody>
+          {% for e in dernieres_depenses %}
+          <tr>
+            <td>{{ e.date_depense|date:"d/m/Y" }}</td>
+            <td><span class="badge badge-orange">{{ e.categorie }}</span></td>
+            <td class="t-right t-red nowrap">{{ e.montant|floatformat:0 }} FCFA</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3"><div class="empty"><p>Aucune dépense récente</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ repartition_chambres|json_script:"data-types" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var mois = {{ mois_labels|safe }};
+  var revenus = {{ revenus_mensuels|safe }};
+  var depenses = {{ depenses_mensuels|safe }};
+  var taux = {{ taux_mensuels|safe }};
+  var types = JSON.parse(document.getElementById('data-types').textContent);
+
+  /* Palette validée (daltonisme + contraste) — une couleur fixe par entité */
+  var C = {
+    revenus: '#2a78d6', depenses: '#eb6834', occupation: '#1baf7a',
+    types: { 'Simple': '#2a78d6', 'Double': '#eb6834', 'Suite': '#1baf7a', 'Dortoir': '#eda100' },
+    grid: '#eef0f3', axis: '#d1d5db', muted: '#6b7280', ink: '#111827', surface: '#ffffff'
+  };
+
+  Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = C.muted;
+
+  var fcfa = function (v) { return Math.round(Number(v)).toLocaleString('fr-FR') + ' FCFA'; };
+  var compact = function (v) {
+    v = Number(v);
+    if (Math.abs(v) >= 1e6) return (v / 1e6).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' M';
+    if (Math.abs(v) >= 1e3) return (v / 1e3).toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' k';
+    return v;
+  };
+  var axes = function (yTicks, yExtra) {
+    return {
+      x: { grid: { display: false }, border: { color: C.axis }, ticks: { color: C.muted } },
+      y: Object.assign({ beginAtZero: true, grid: { color: C.grid, drawTicks: false }, border: { display: false },
+                         ticks: Object.assign({ color: C.muted, padding: 8, maxTicksLimit: 5 }, yTicks) }, yExtra || {})
+    };
+  };
+  var tooltip = function (label) {
+    return { backgroundColor: '#ffffff', titleColor: C.ink, bodyColor: C.ink, borderColor: '#e5e7eb', borderWidth: 1,
+             padding: 10, boxPadding: 4, usePointStyle: true, callbacks: { label: label } };
+  };
+  var legend = { position: 'bottom', align: 'start',
+                 labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 10, boxHeight: 10, padding: 18, color: C.ink } };
+
+  var el = document.getElementById('chartRevenus');
+  if (el) {
+    new Chart(el, {
+      type: 'bar',
+      data: { labels: mois, datasets: [
+        { label: 'Revenus', data: revenus, backgroundColor: C.revenus, borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: 'bottom', maxBarThickness: 22 },
+        { label: 'Dépenses', data: depenses, backgroundColor: C.depenses, borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: 'bottom', maxBarThickness: 22 }
+      ] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        datasets: { bar: { categoryPercentage: 0.6, barPercentage: 0.9 } },
+        interaction: { mode: 'index', intersect: false },
+        scales: axes({ callback: compact }),
+        plugins: { legend: legend, tooltip: tooltip(function (c) { return ' ' + c.dataset.label + ' : ' + fcfa(c.parsed.y); }) }
+      }
+    });
+  }
+
+  el = document.getElementById('chartOccupation');
+  if (el) {
+    var ctx = el.getContext('2d');
+    var fill = ctx.createLinearGradient(0, 0, 0, 300);
+    fill.addColorStop(0, 'rgba(27, 175, 122, 0.18)');
+    fill.addColorStop(1, 'rgba(27, 175, 122, 0)');
+    new Chart(el, {
+      type: 'line',
+      data: { labels: mois, datasets: [{
+        label: 'Taux d\'occupation', data: taux, borderColor: C.occupation, backgroundColor: fill, fill: true,
+        borderWidth: 2, tension: 0.35, pointRadius: 4, pointHoverRadius: 6,
+        pointBackgroundColor: C.occupation, pointBorderColor: C.surface, pointBorderWidth: 2
+      }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: axes({ callback: function (v) { return v + ' %'; } }, { suggestedMax: 100 }),
+        plugins: { legend: { display: false }, tooltip: tooltip(function (c) { return ' ' + c.parsed.y + ' % d\'occupation'; }) }
+      }
+    });
+  }
+
+  el = document.getElementById('chartRepartition');
+  if (el && types.length) {
+    new Chart(el, {
+      type: 'doughnut',
+      data: { labels: types.map(function (t) { return t.type_chambre; }),
+              datasets: [{ data: types.map(function (t) { return t.nb; }),
+                           backgroundColor: types.map(function (t) { return C.types[t.type_chambre] || '#9ca3af'; }),
+                           borderColor: C.surface, borderWidth: 2, hoverOffset: 4 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: { legend: { display: false },
+                   tooltip: tooltip(function (c) { return ' ' + c.label + ' : ' + c.parsed + ' chambre' + (c.parsed > 1 ? 's' : ''); }) }
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

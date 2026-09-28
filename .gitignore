@@ -1,0 +1,49 @@
+# Environnements virtuels Python
+venv/
+.venv-1/
+.venv/
+env/
+
+# Fichiers Python compilés
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Base de données locale
+db.sqlite3
+*.sqlite3
+
+# Fichiers d'environnement / secrets
+.env
+*.env
+
+# Dossier media (uploads utilisateurs)
+media/
+staticfiles/
+
+# IDE et éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Claude Code
+.claude/
+
+# Dump de données
+dump.json
+donnees.json
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log

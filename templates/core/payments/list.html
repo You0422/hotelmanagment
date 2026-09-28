@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Paiements · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Gestion des Paiements</h1>
+    <p class="page-subtitle">Suivi des transactions et facturation (FCFA)</p>
+  </div>
+  <button type="button" class="btn btn-primary btn-lg" data-modal-open="#paymentModal">{% include "icons/plus.html" with cls="icon" %}Nouveau paiement</button>
+</div>
+
+<div class="grid-4">
+  <div class="stat-card-border accent-blue">
+    <div><p class="stat-label">Total paiements</p><p class="stat-value">{{ total_encaisse|floatformat:0|intcomma }} FCFA</p></div>
+    <div class="stat-icon-soft">{% include "icons/dollar-sign.html" with cls="icon-lg" %}</div>
+  </div>
+  <div class="stat-card-border accent-green">
+    <div><p class="stat-label">Transactions</p><p class="stat-value">{{ payments|length }}</p></div>
+    <div class="stat-icon-soft">{% include "icons/receipt.html" with cls="icon-lg" %}</div>
+  </div>
+  <div class="stat-card-border accent-amber">
+    <div><p class="stat-label">Paiements aujourd'hui</p><p class="stat-value">{{ paiements_aujourdhui|default:0 }}</p></div>
+    <div class="stat-icon-soft">{% include "icons/clock.html" with cls="icon-lg" %}</div>
+  </div>
+  <div class="stat-card-border accent-red">
+    <div><p class="stat-label">Réservations actives</p><p class="stat-value">{{ reservations|length }}</p></div>
+    <div class="stat-icon-soft">{% include "icons/alert-circle.html" with cls="icon-lg" %}</div>
+  </div>
+</div>
+
+{% if reservations %}
+<div class="note note-orange p-6" style="background: linear-gradient(to right, var(--orange-50), var(--red-50));">
+  <div class="flex items-center gap-2 mb-4">
+    <span class="text-orange">{% include "icons/alert-circle.html" with cls="icon-lg" %}</span>
+    <h2 class="panel-title-sm" style="color: var(--orange-900);">Réservations en attente de paiement</h2>
+  </div>
+  <div class="grid-3">
+    {% for r in reservations %}{% if r.solde_du > 0 %}
+    <div class="panel p-4" style="border:1px solid var(--orange-100); box-shadow:none;">
+      <div class="flex justify-between gap-2">
+        <div class="truncate">
+          <p class="font-semibold truncate">{{ r.client.prenom }} {{ r.client.nom }}</p>
+          <p class="text-sm text-muted">Rés. #{{ r.id }} · Chambre {{ r.chambre.numero_chambre }}</p>
+        </div>
+        <span class="text-orange">{% include "icons/clock.html" with cls="icon" %}</span>
+      </div>
+      <div style="border-top:1px solid var(--gray-200); padding-top:.75rem; margin-top:.75rem;">
+        <p class="text-sm text-muted">Montant restant</p>
+        <p class="font-bold text-orange" style="font-size:1.25rem;">{{ r.solde_du|floatformat:0|intcomma }} FCFA</p>
+      </div>
+    </div>
+    {% endif %}{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="panel-lg overflow-hidden">
+  <div class="panel-head-border">
+    <div class="panel-head mb-4">
+      <h2 class="panel-title">Historique des paiements</h2>
+    </div>
+    <form method="get" class="search-row">
+      <div class="search-box">
+        {% include "icons/search.html" with cls="icon" %}
+        <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par client ou référence..." class="input">
+      </div>
+      <button type="submit" class="btn btn-primary">Rechercher</button>
+      {% if q %}<a href="{% url 'payment_list' %}" class="btn btn-outline">Effacer</a>{% endif %}
+    </form>
+  </div>
+
+  {% if payments %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Client</th><th>Réservation</th><th>Montant (FCFA)</th><th>Méthode</th><th>Référence</th><th>Reçu</th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td class="nowrap">{{ p.date_paiement|date:"d/m/Y" }}<div class="t-muted">{{ p.date_paiement|date:"H:i" }}</div></td>
+          <td class="t-strong">{{ p.reservation.client.prenom }} {{ p.reservation.client.nom }}</td>
+          <td><a href="{% url 'reservation_detail' p.reservation.pk %}" class="link-more">Rés. #{{ p.reservation.id }}</a><div class="t-muted">Chambre {{ p.reservation.chambre.numero_chambre }}</div></td>
+          <td class="t-green nowrap">{{ p.montant_paye|floatformat:0|intcomma }}</td>
+          <td><span class="badge {% if p.methode_paiement == 'Espèces' %}badge-green{% elif p.methode_paiement == 'Mobile Money' %}badge-orange{% else %}badge-blue{% endif %}">{% if p.methode_paiement == 'Espèces' %}💵{% elif p.methode_paiement == 'Mobile Money' %}📱{% else %}💳{% endif %} {{ p.get_methode_paiement_display }}</span></td>
+          <td class="t-muted">{{ p.reference_paiement|default:"—" }}</td>
+          <td><a href="{% url 'payment_receipt' p.pk %}" class="icon-btn icon-btn-green" title="Reçu de paiement" target="_blank" rel="noopener">{% include "icons/receipt.html" with cls="icon-sm" %}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    {% include "icons/credit-card.html" with cls="icon-empty" %}
+    <h3>Aucun paiement</h3>
+    <p>{% if q %}Aucun paiement ne correspond à votre recherche{% else %}Les paiements enregistrés apparaîtront ici{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+
+<div class="modal" id="paymentModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Nouveau paiement" %}
+    <form method="post" action="{% url 'payment_create' %}" class="form-body">
+      {% csrf_token %}
+      {% include "core/payments/_fields.html" %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

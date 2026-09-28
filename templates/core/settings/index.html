@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Paramètres · HotelManagment{% endblock %}
+{% block content %}
+
+<div>
+  <h1 class="page-title">Paramètres</h1>
+  <p class="page-subtitle">Configurez les informations de votre établissement</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="panel p-6 settings-form">
+  {% csrf_token %}
+  {% include "core/partials/form_errors.html" %}
+
+  <div class="form-section">
+    <h2 class="form-section-title">Informations générales</h2>
+    <div class="form-grid">
+      <div class="field col-span-full"><label for="id_nom_etablissement">Nom de l'établissement *</label><input type="text" name="nom_etablissement" id="id_nom_etablissement" class="input" value="{{ form.nom_etablissement.value|default:'' }}" placeholder="Ex: Hôtel Paradis" required></div>
+      <div class="field col-span-full"><label for="id_adresse">Adresse</label><input type="text" name="adresse" id="id_adresse" class="input" value="{{ form.adresse.value|default:'' }}" placeholder="Ex: 123 Avenue Principale, Ville"></div>
+      <div class="field"><label for="id_telephone">Téléphone</label><input type="tel" name="telephone" id="id_telephone" class="input" value="{{ form.telephone.value|default:'' }}" placeholder="Ex: +225 XX XX XX XX XX"></div>
+      <div class="field"><label for="id_email">Email</label><input type="email" name="email" id="id_email" class="input" value="{{ form.email.value|default:'' }}" placeholder="Ex: contact@hotel.com"></div>
+      <div class="field"><label for="id_nom_gerant">Nom du gérant</label><input type="text" name="nom_gerant" id="id_nom_gerant" class="input" value="{{ form.nom_gerant.value|default:'' }}" placeholder="Ex: Jean Dupont"></div>
+      <div class="field"><label for="id_devise">Devise</label><input type="text" name="devise" id="id_devise" class="input is-locked" value="{{ form.devise.value|default:'FCFA' }}" readonly></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h2 class="form-section-title">Informations fiscales et bancaires</h2>
+    <div class="form-grid">
+      <div class="field"><label for="id_ifu">IFU (Identifiant Fiscal Unique)</label><input type="text" name="ifu" id="id_ifu" class="input" value="{{ form.ifu.value|default:'' }}" placeholder="Ex: XXXXXXXXXX"><p class="field-help">Identifiant fiscal de votre établissement</p></div>
+      <div class="field"><label for="id_rccm">RCCM (Registre du Commerce et du Crédit Mobilier)</label><input type="text" name="rccm" id="id_rccm" class="input" value="{{ form.rccm.value|default:'' }}" placeholder="Ex: XXXXXXXXXX"><p class="field-help">Numéro d'immatriculation au RCCM</p></div>
+      <div class="field col-span-full"><label for="id_numero_compte_bancaire">Numéro de compte bancaire</label><input type="text" name="numero_compte_bancaire" id="id_numero_compte_bancaire" class="input" value="{{ form.numero_compte_bancaire.value|default:'' }}" placeholder="Ex: XX XX XXXX XXXX XXXX"><p class="field-help">Numéro de compte pour les virements</p></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h2 class="form-section-title">Logo de l'établissement</h2>
+    <div class="logo-row">
+      <div style="flex:1;">
+        <p class="field-label">Télécharger le logo (max 2 MB)</p>
+        <label class="btn btn-soft btn-soft-gray file-btn">{% include "icons/upload.html" with cls="icon" %}Choisir un fichier<input type="file" name="logo" id="id_logo" accept="image/*" hidden></label>
+        <span class="text-sm text-muted" id="logoFileName"></span>
+        <p class="field-help mt-2">Formats acceptés : JPG, PNG, GIF. Le logo sera utilisé sur les factures et rapports.</p>
+      </div>
+      <div class="logo-preview" id="logoPreview" {% if not form.instance.logo %}hidden{% endif %}>
+        <p class="text-sm font-semibold mb-2" style="color:var(--gray-700);">Aperçu</p>
+        <img src="{% if form.instance.logo %}{{ form.instance.logo.url }}{% endif %}" alt="Logo" id="logoPreviewImg">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section settings-save">
+    <button type="submit" class="btn btn-primary btn-lg">{% include "icons/check.html" with cls="icon" %}Enregistrer les paramètres</button>
+  </div>
+</form>
+
+<div class="grid-2 gap-6">
+  <div class="info-box is-blue">
+    <h3>À propos de cette application</h3>
+    <p class="strong">HotelManagment — application de gestion d'hôtel</p>
+    <p>Chambres, clients, réservations, calendrier, paiements, services, dépenses et rapports, pour votre établissement.</p>
+  </div>
+  <div class="info-box is-green">
+    <h3>Données d'exemple</h3>
+    <p>Pour tester l'application, vous pouvez ajouter des données d'exemple (chambres, clients, réservations).</p>
+    <form method="post" action="{% url 'settings_sample_data' %}" data-confirm="Voulez-vous ajouter des données d'exemple ? (Cela n'écrasera pas vos données existantes)">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-success">{% include "icons/package.html" with cls="icon-sm" %}Ajouter des données d'exemple</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  /* Aperçu du logo choisi (max 2 Mo, comme la démo) */
+  (function () {
+    var input = document.getElementById('id_logo');
+    input.addEventListener('change', function () {
+      var file = input.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) { alert('Le fichier est trop volumineux. Maximum 2 MB.'); input.value = ''; return; }
+      document.getElementById('logoFileName').textContent = file.name;
+      var reader = new FileReader();
+      reader.onload = function () {
+        document.getElementById('logoPreviewImg').src = reader.result;
+        document.getElementById('logoPreview').hidden = false;
+      };
+      reader.readAsDataURL(file);
+    });
+  })();
+</script>
+{% endblock %}

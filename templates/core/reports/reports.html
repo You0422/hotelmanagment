@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Rapports</h1>
+<div class="row g-3">
+  <div class="col-12 col-md-6">
+    <div class="card p-3">
+      <h2 class="h6">Indicateurs</h2>
+      <ul class="list-unstyled mb-0">
+        <li>Taux d'occupation: <strong>{{ taux_occupation }} %</strong></li>
+        <li>Recettes: <strong>{{ total_recettes }} FCFA</strong></li>
+        <li>Dépenses: <strong>{{ total_depenses }} FCFA</strong></li>
+        <li>Bénéfice net: <strong>{{ benefice_net }} FCFA</strong></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

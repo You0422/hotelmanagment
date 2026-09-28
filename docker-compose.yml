@@ -1,0 +1,66 @@
+# HotelManagment sur un VPS (Systalink, OVH, Hostinger...) : application + PostgreSQL + HTTPS
+# Démarrage : docker compose up -d --build   (les réglages viennent du fichier .env)
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: ${DOMAINE}
+      DJANGO_CSRF_TRUSTED_ORIGINS: https://${DOMAINE}
+      DJANGO_USE_X_FORWARDED: "True"
+      DJANGO_SECURE_COOKIES: "True"
+      DJANGO_MEDIA_ROOT: /app/media
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DB_SSL_REQUIRE: "False"
+    command: >-
+      sh -c "python manage.py migrate --no-input &&
+      python manage.py collectstatic --no-input &&
+      gunicorn prohotel.wsgi:application --bind 0.0.0.0:8080 --workers 3 --timeout 120 --access-logfile -"
+    volumes:
+      - media_data:/app/media
+    expose:
+      - "8080"
+
+  # Certificat HTTPS obtenu et renouvelé automatiquement
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAINE: ${DOMAINE}
+      EMAIL_ADMIN: ${EMAIL_ADMIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  db_data:
+  media_data:
+  caddy_data:
+  caddy_config:

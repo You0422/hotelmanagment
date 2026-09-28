@@ -1,0 +1,5 @@
+{# En-tête commun des formulaires en pleine page (même format que les modales). Paramètres : title, back_url #}
+<div class="modal-head">
+  <h1 class="modal-title">{{ title }}</h1>
+  <a href="{{ back_url }}" class="modal-close" aria-label="Fermer">{% include "icons/x.html" with cls="icon-lg" %}</a>
+</div>

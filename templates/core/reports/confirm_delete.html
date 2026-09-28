@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card p-4" style="max-width:720px; margin:auto;">
+  <h1 class="h5 mb-3">Supprimer ce rapport ?</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="d-flex gap-2">
+      <button class="btn btn-danger">Supprimer</button>
+      <a class="btn btn-outline-secondary" href="{% url 'reports' %}">Annuler</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

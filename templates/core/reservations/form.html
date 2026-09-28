@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{% if edit_mode %}Modifier la réservation{% else %}Nouvelle réservation{% endif %} · HotelManagment{% endblock %}
+{% block content %}
+<div class="page-narrow">
+
+  <div class="panel p-6">
+    {% url 'reservations_list' as back_url %}
+    {% if edit_mode %}{% include "core/partials/page_form_head.html" with title="Modifier la réservation" back_url=back_url %}{% else %}{% include "core/partials/page_form_head.html" with title="Nouvelle réservation" back_url=back_url %}{% endif %}
+    <form method="post" class="form-body auto-form">
+      {% csrf_token %}
+      {% include "core/partials/form_errors.html" %}
+      <div class="form-grid">
+      {% for field in form %}
+        {% if field.is_hidden %}{{ field }}{% elif field.field.widget.input_type == 'checkbox' %}
+        <label class="check col-span-full">{{ field }} {{ field.label }}</label>
+        {% else %}
+        <div class="field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="req">*</span>{% endif %}</label>
+          {{ field }}
+          {% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+      </div>
+      <div class="form-actions">
+        <a href="{% url 'reservations_list' %}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

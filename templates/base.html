@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}HotelManagment{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+{% with url_name=request.resolver_match.url_name %}
+<div class="app-shell">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" data-sidebar-close></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-row">
+        <h1>{% include "icons/hotel.html" with cls="icon-xl" %}<span>HotelManagment</span></h1>
+        <button type="button" class="sidebar-close" data-sidebar-close aria-label="Fermer le menu">{% include "icons/x.html" with cls="icon-lg" %}</button>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="sidebar-link {% if url_name == 'home' %}is-active{% endif %}" href="{% url 'home' %}">
+        {% include "icons/home.html" with cls="icon" %}<span>Tableau de bord</span>
+      </a>
+      <a class="sidebar-link {% if url_name and 'room' in url_name %}is-active{% endif %}" href="{% url 'rooms_list' %}">
+        {% include "icons/hotel.html" with cls="icon" %}<span>Chambres</span>
+      </a>
+      <a class="sidebar-link {% if url_name and 'client' in url_name %}is-active{% endif %}" href="{% url 'clients_list' %}">
+        {% include "icons/users.html" with cls="icon" %}<span>Clients</span>
+      </a>
+      <a class="sidebar-link {% if url_name and 'reservation' in url_name %}is-active{% endif %}" href="{% url 'reservations_list' %}">
+        {% include "icons/calendar.html" with cls="icon" %}<span>Réservations</span>
+      </a>
+      <a class="sidebar-link {% if url_name == 'calendar' %}is-active{% endif %}" href="{% url 'calendar' %}">
+        {% include "icons/calendar.html" with cls="icon" %}<span>Calendrier</span>
+      </a>
+      <a class="sidebar-link {% if url_name and 'payment' in url_name %}is-active{% endif %}" href="{% url 'payment_list' %}">
+        {% include "icons/credit-card.html" with cls="icon" %}<span>Paiements</span>
+      </a>
+      <a class="sidebar-link {% if url_name and 'service' in url_name %}is-active{% endif %}" href="{% url 'services_list' %}">
+        {% include "icons/briefcase.html" with cls="icon" %}<span>Services</span>
+      </a>
+      {% if can_manage_expenses %}
+      <a class="sidebar-link {% if url_name and 'expenses' in url_name %}is-active{% endif %}" href="{% url 'expenses_list' %}">
+        {% include "icons/trending-down.html" with cls="icon" %}<span>Dépenses</span>
+      </a>
+      {% endif %}
+      {% if is_admin %}
+      <a class="sidebar-link {% if url_name and 'report' in url_name %}is-active{% endif %}" href="{% url 'reports' %}">
+        {% include "icons/file-text.html" with cls="icon" %}<span>Rapports</span>
+      </a>
+      <a class="sidebar-link {% if url_name == 'settings_view' %}is-active{% endif %}" href="{% url 'settings_view' %}">
+        {% include "icons/settings.html" with cls="icon" %}<span>Paramètres</span>
+      </a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">{{ user.username|make_list|first|upper }}</div>
+      <div class="truncate">
+        <div class="sidebar-user-name truncate">{{ user.username }}</div>
+        <div class="sidebar-user-role">{% if is_admin %}Administrateur{% else %}Gérant{% endif %}</div>
+      </div>
+      <a class="sidebar-logout" href="{% url 'logout' %}" title="Déconnexion" aria-label="Déconnexion">{% include "icons/log-out.html" with cls="icon" %}</a>
+    </div>
+    <div class="sidebar-footer">© {% now "Y" %} HotelManagment</div>
+  </aside>
+
+  <main class="main">
+    <div class="mobile-bar">
+      <button type="button" data-sidebar-open aria-label="Ouvrir le menu">{% include "icons/menu.html" with cls="icon-lg" %}</button>
+      <h1>HotelManagment</h1>
+      <div style="width:2.5rem"></div>
+    </div>
+
+    <div class="content">
+      <div class="stack">
+        {% if messages %}
+        <div class="alerts">
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+            {% if message.tags == 'success' %}{% include "icons/check-circle.html" with cls="icon" %}{% else %}{% include "icons/alert-circle.html" with cls="icon" %}{% endif %}
+            <div class="alert-text">{{ message }}</div>
+            <button type="button" class="alert-close" data-alert-close aria-label="Fermer">{% include "icons/x.html" with cls="icon-sm" %}</button>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endwith %}
+
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

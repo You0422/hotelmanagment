@@ -1,0 +1,22 @@
+{# Champs du paiement (format commun). Paramètre facultatif : reservations (liste à choisir) #}
+<div class="form-grid">
+  {% if reservations %}
+  <div class="field col-span-full"><label>Réservation <span class="req">*</span></label>
+    <select name="reservation" class="select" required>
+      <option value="">Sélectionner une réservation...</option>
+      {% for r in reservations %}
+      <option value="{{ r.pk }}">Rés. #{{ r.id }} — {{ r.client.prenom }} {{ r.client.nom }} (Ch. {{ r.chambre.numero_chambre }}) — Solde : {{ r.solde_du|floatformat:0 }} FCFA</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% endif %}
+  <div class="field"><label>Montant payé (FCFA) <span class="req">*</span></label><input type="number" name="montant_paye" class="input" placeholder="0" min="1" step="1" required></div>
+  <div class="field"><label>Méthode de paiement <span class="req">*</span></label>
+    <select name="methode_paiement" class="select" required>
+      <option value="Espèces">Espèces</option>
+      <option value="Mobile Money">Mobile Money</option>
+      <option value="Carte Bancaire">Carte Bancaire</option>
+    </select>
+  </div>
+  <div class="field col-span-full"><label>Référence</label><input type="text" name="reference_paiement" class="input" placeholder="ID transaction Mobile Money ou n° de reçu"></div>
+</div>

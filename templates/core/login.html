@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion · HotelManagment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-split is-login">
+
+      <aside class="auth-aside">
+        <div class="auth-brand">{% include "icons/hotel.html" with cls="icon-xl" %}<span>HotelManagment</span></div>
+        <h2>Bon retour parmi nous</h2>
+        <p class="auth-aside-lead">Connectez-vous pour retrouver vos chambres, vos clients et vos réservations.</p>
+        <ul class="auth-aside-list">
+          <li>{% include "icons/calendar.html" with cls="icon-sm" %}<div><strong>Arrivées et départs du jour</strong><span>Tout le séjour en un coup d'œil</span></div></li>
+          <li>{% include "icons/receipt.html" with cls="icon-sm" %}<div><strong>Factures et reçus</strong><span>Prêts à imprimer, en FCFA</span></div></li>
+          <li>{% include "icons/bar-chart.html" with cls="icon-sm" %}<div><strong>Revenus et dépenses</strong><span>Tableau de bord tenu à jour</span></div></li>
+        </ul>
+        <p class="auth-aside-foot">Connexion sécurisée. Vos données ne sont visibles que par votre établissement.</p>
+      </aside>
+
+      <div class="auth-main">
+        <div class="auth-main-head">
+          <div class="login-logo auth-logo-mobile">{% include "icons/hotel.html" with cls="icon-xl" %}</div>
+          <h1>Connexion</h1>
+          <p>Entrez vos identifiants pour accéder à votre établissement</p>
+        </div>
+
+        {% if messages %}
+        <div class="alerts mt-4">
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'error' }}" role="alert">
+            {% if message.tags == 'success' %}{% include "icons/check-circle.html" with cls="icon" %}{% else %}{% include "icons/alert-circle.html" with cls="icon" %}{% endif %}
+            <div class="alert-text">{{ message }}</div>
+            <button type="button" class="alert-close" data-alert-close aria-label="Fermer">{% include "icons/x.html" with cls="icon-sm" %}</button>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="auth-form">
+          {% csrf_token %}
+          <div class="field">
+            <label for="username">Nom d'utilisateur</label>
+            <div class="input-icon">
+              {% include "icons/user.html" with cls="icon-sm" %}
+              <input type="text" class="input" id="username" name="username" placeholder="Entrez votre nom d'utilisateur" autocomplete="username" required autofocus>
+            </div>
+          </div>
+          <div class="field">
+            <label for="password">Mot de passe</label>
+            <div class="password-wrap">
+              <input type="password" class="input" id="password" name="password" placeholder="Entrez votre mot de passe" autocomplete="current-password" required>
+              <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Afficher le mot de passe">
+                <span data-eye>{% include "icons/eye.html" with cls="icon" %}</span>
+                <span data-eye-off hidden>{% include "icons/eye-off.html" with cls="icon" %}</span>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block">{% include "icons/log-in.html" with cls="icon" %}Se connecter</button>
+        </form>
+
+        <p class="auth-foot">Nouvel établissement ? <a class="link-more" href="{% url 'register' %}">Enregistrer votre hôtel</a></p>
+        <p class="auth-copy">© {% now "Y" %} HotelManagment — Tous droits réservés</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="{% static 'js/app.js' %}"></script>
+  <script>
+    /* Afficher / masquer le mot de passe */
+    document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+      var champ = document.getElementById(btn.getAttribute('data-toggle-password'));
+      btn.addEventListener('click', function () {
+        var visible = champ.type === 'password';
+        champ.type = visible ? 'text' : 'password';
+        btn.querySelector('[data-eye]').hidden = visible;
+        btn.querySelector('[data-eye-off]').hidden = !visible;
+        btn.setAttribute('aria-label', visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+      });
+    });
+  </script>
+</body>
+</html>

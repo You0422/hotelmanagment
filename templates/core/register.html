@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enregistrer un hôtel · HotelManagment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-split">
+
+      <aside class="auth-aside">
+        <div class="auth-brand">{% include "icons/hotel.html" with cls="icon-xl" %}<span>HotelManagment</span></div>
+        <h2>Votre hôtel, entièrement géré en ligne</h2>
+        <p class="auth-aside-lead">Créez votre espace en 2 minutes. Aucune installation, rien à payer pour commencer.</p>
+        <ul class="auth-aside-list">
+          <li>{% include "icons/bed.html" with cls="icon-sm" %}<div><strong>Chambres et réservations</strong><span>Calendrier, arrivées et départs du jour</span></div></li>
+          <li>{% include "icons/users.html" with cls="icon-sm" %}<div><strong>Clients et fiches</strong><span>Numéro client et fiche PDF prête à imprimer</span></div></li>
+          <li>{% include "icons/receipt.html" with cls="icon-sm" %}<div><strong>Factures et reçus</strong><span>En FCFA, avec votre logo, IFU et RCCM</span></div></li>
+          <li>{% include "icons/bar-chart.html" with cls="icon-sm" %}<div><strong>Revenus et dépenses</strong><span>Tableau de bord et rapports à exporter</span></div></li>
+        </ul>
+        <p class="auth-aside-foot">Vos données restent les vôtres. Vous seul et vos gérants y avez accès.</p>
+      </aside>
+
+      <div class="auth-main">
+        <div class="auth-main-head">
+          <h1>Enregistrer votre hôtel</h1>
+          <p>Créez l'espace de votre établissement et vos identifiants administrateur</p>
+        </div>
+
+        <ol class="steps" id="steps">
+          <li class="step is-current" data-step="1"><span class="step-num">1</span>Établissement</li>
+          <li class="step" data-step="2"><span class="step-num">2</span>Identifiants</li>
+        </ol>
+
+        <form method="post" class="auth-form" id="registerForm" novalidate>
+          {% csrf_token %}
+          {% if form.errors %}
+          <div class="alert alert-error" role="alert">
+            {% include "icons/alert-circle.html" with cls="icon" %}
+            <div class="alert-text">
+              {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+              {% if not form.non_field_errors %}Certains champs doivent être corrigés (voir en rouge ci-dessous).{% endif %}
+            </div>
+          </div>
+          {% endif %}
+
+          {# ---------- Étape 1 : l'établissement ---------- #}
+          <section class="auth-step" data-panel="1">
+            <div class="field">
+              <label for="id_nom_etablissement">Nom de l'établissement <span class="req">*</span></label>
+              <div class="input-icon">
+                {% include "icons/hotel.html" with cls="icon-sm" %}
+                <input type="text" name="nom_etablissement" id="id_nom_etablissement" class="input" placeholder="Ex: Hôtel Paradis" value="{{ form.nom_etablissement.value|default:'' }}" required autofocus>
+              </div>
+              {% for e in form.nom_etablissement.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+            </div>
+            <div class="field">
+              <label for="id_adresse">Adresse</label>
+              <div class="input-icon">
+                {% include "icons/map-pin.html" with cls="icon-sm" %}
+                <input type="text" name="adresse" id="id_adresse" class="input" placeholder="Ex: Yopougon, Abidjan" value="{{ form.adresse.value|default:'' }}">
+              </div>
+              {% for e in form.adresse.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="id_telephone">Téléphone</label>
+                <div class="input-icon">
+                  {% include "icons/phone.html" with cls="icon-sm" %}
+                  <input type="tel" name="telephone" id="id_telephone" class="input" placeholder="+225 XX XX XX XX XX" value="{{ form.telephone.value|default:'' }}">
+                </div>
+                {% for e in form.telephone.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+              </div>
+              <div class="field">
+                <label for="id_email">Email</label>
+                <div class="input-icon">
+                  {% include "icons/mail.html" with cls="icon-sm" %}
+                  <input type="email" name="email" id="id_email" class="input" placeholder="contact@hotel.com" value="{{ form.email.value|default:'' }}">
+                </div>
+                {% for e in form.email.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+              </div>
+            </div>
+            <div class="field">
+              <label for="id_nom_gerant">Nom du gérant</label>
+              <div class="input-icon">
+                {% include "icons/user.html" with cls="icon-sm" %}
+                <input type="text" name="nom_gerant" id="id_nom_gerant" class="input" placeholder="Nom complet" value="{{ form.nom_gerant.value|default:'' }}">
+              </div>
+              {% for e in form.nom_gerant.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+            </div>
+
+            <div class="auth-actions">
+              <a href="{% url 'login' %}" class="btn btn-outline">Annuler</a>
+              <button type="button" class="btn btn-primary btn-lg" data-next>Continuer{% include "icons/arrow-left.html" with cls="icon-sm icon-flip" %}</button>
+            </div>
+          </section>
+
+          {# ---------- Étape 2 : les identifiants ---------- #}
+          <section class="auth-step" data-panel="2" hidden>
+            <div class="note note-blue is-text">Ce compte sera l'<strong>administrateur</strong> de l'hôtel : il pourra tout gérer et créer les comptes de ses gérants.</div>
+
+            <div class="field">
+              <label for="id_username">Nom d'utilisateur <span class="req">*</span></label>
+              <div class="input-icon">
+                {% include "icons/user.html" with cls="icon-sm" %}
+                <input type="text" name="username" id="id_username" class="input" placeholder="Ex: hotelparadis" autocomplete="username" value="{{ form.username.value|default:'' }}" required>
+              </div>
+              <p class="field-help">C'est l'identifiant de connexion. Sans espace ni accent.</p>
+              {% for e in form.username.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+            </div>
+
+            <div class="field">
+              <label for="id_password1">Mot de passe <span class="req">*</span></label>
+              <div class="password-wrap">
+                <input type="password" name="password1" id="id_password1" class="input" autocomplete="new-password" required>
+                <button type="button" class="password-toggle" data-toggle-password="id_password1" aria-label="Afficher le mot de passe">
+                  <span data-eye>{% include "icons/eye.html" with cls="icon" %}</span>
+                  <span data-eye-off hidden>{% include "icons/eye-off.html" with cls="icon" %}</span>
+                </button>
+              </div>
+              <div class="pwd-meter" id="pwdMeter" hidden><span></span></div>
+              <ul class="pwd-rules" id="pwdRules" hidden>
+                <li data-rule="len">Au moins 8 caractères</li>
+                <li data-rule="digit">Pas uniquement des chiffres</li>
+                <li data-rule="common">Pas un mot de passe trop courant (12345678, azerty...)</li>
+              </ul>
+              {% for e in form.password1.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+            </div>
+
+            <div class="field">
+              <label for="id_password2">Confirmation <span class="req">*</span></label>
+              <div class="password-wrap">
+                <input type="password" name="password2" id="id_password2" class="input" autocomplete="new-password" required>
+                <button type="button" class="password-toggle" data-toggle-password="id_password2" aria-label="Afficher le mot de passe">
+                  <span data-eye>{% include "icons/eye.html" with cls="icon" %}</span>
+                  <span data-eye-off hidden>{% include "icons/eye-off.html" with cls="icon" %}</span>
+                </button>
+              </div>
+              <p class="field-ok" id="pwdMatch" hidden>{% include "icons/check.html" with cls="icon-sm" %}Les deux mots de passe correspondent</p>
+              {% for e in form.password2.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+            </div>
+
+            <div class="auth-actions">
+              <button type="button" class="btn btn-outline" data-prev>{% include "icons/arrow-left.html" with cls="icon-sm" %}Retour</button>
+              <button type="submit" class="btn btn-primary btn-lg">{% include "icons/check.html" with cls="icon" %}Enregistrer l'hôtel</button>
+            </div>
+          </section>
+        </form>
+
+        <p class="auth-foot">Déjà inscrit ? <a class="link-more" href="{% url 'login' %}">Se connecter</a></p>
+      </div>
+    </div>
+  </main>
+  <script src="{% static 'js/app.js' %}"></script>
+  <script src="{% static 'js/register.js' %}"></script>
+</body>
+</html>

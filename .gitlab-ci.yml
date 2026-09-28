@@ -1,0 +1,60 @@
+image: docker:20.10.16
+
+services:
+  - docker:20.10.16-dind
+
+variables:
+  # Connexion TLS entre le client docker et le service docker:dind
+  DOCKER_TLS_CERTDIR: "/certs"
+
+stages:
+  - build-image-uat
+  - deploy-image-uat
+
+before_script:
+  - echo "${CI_REGISTRY_PASSWORD}" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+
+build-image-uat-job:
+  stage: build-image-uat
+  only:
+    refs:
+      - develop
+  script:
+    - IMAGE_TAG="${CI_COMMIT_SHORT_SHA}"
+    - docker build -t ${CI_REGISTRY_IMAGE}:${IMAGE_TAG} .
+    - docker push ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
+
+#Job Gitops Gitlab-ci
+
+deploy-image-uat:
+  stage: deploy-image-uat
+  dependencies:
+    - build-image-uat-job
+  variables:
+    HELM_IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  only:
+    refs:
+      - develop
+  before_script:
+    - apk add --no-cache git #installer git
+  script:
+    - |
+      echo "Configuration de Git pour GitOps"
+      git config --global user.email "gitops@gitops.com"
+      git config --global user.name "gitops"
+      echo "Récupération et mise à jour de la branche Helm"
+      # Le pipeline ne récupère que la branche develop : on va chercher helm_dev explicitement
+      git fetch origin helm_dev || (echo "Failed to fetch" && exit 1)
+      git checkout -B helm_dev origin/helm_dev || (echo "Failed to checkout helm_dev" && exit 1)
+      echo "Mise à jour de l'image Docker dans le fichier Helm"
+      sed -i "/image\.tag/{n;s/.*/                  value: $HELM_IMAGE_TAG/}" helm/hotel/templates/Application_hotel.yaml
+      git add helm/hotel/templates/Application_hotel.yaml
+      git commit -m "Mise à jour de l'image Docker pour :
+      Branche  : $CI_COMMIT_BRANCH
+      Auteur   : $CI_COMMIT_AUTHOR
+      Temps    : $CI_COMMIT_TIMESTAMP
+      Message  : $CI_COMMIT_MESSAGE
+      Changement : ${CI_PROJECT_URL}/-/commit/$CI_COMMIT_SHA" || echo "No changes to commit"
+      echo "Poussée des modifications vers la branche GitOps"
+      # Même dépôt que ce projet (mes_projet/gestion-hotel), quel que soit son nom
+      git push "https://${GITOPS_USERNAME}:${GITOPS_PASSWORD}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:helm_dev || (echo "Failed to push changes" && exit 1)

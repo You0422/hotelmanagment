@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{% if expense %}Modifier la dépense{% else %}Ajouter une dépense{% endif %} · HotelManagment{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <div class="panel p-6">
+    {% url 'expenses_list' as back_url %}
+    {% if expense %}{% include "core/partials/page_form_head.html" with title="Modifier la dépense" back_url=back_url %}{% else %}{% include "core/partials/page_form_head.html" with title="Ajouter une dépense" back_url=back_url %}{% endif %}
+    <form method="post" enctype="multipart/form-data" class="form-body">
+      {% csrf_token %}
+      {% include "core/partials/form_errors.html" %}
+      <div class="form-grid">
+        <div class="field"><label for="id_categorie">Catégorie <span class="req">*</span></label>
+          <select name="categorie" id="id_categorie" class="select js-cat-select" required>
+            <option value="">Sélectionner...</option>
+            {% for val, label in form.fields.categorie.choices %}{% if val and val != 'Toute' %}
+            <option value="{{ val }}" {% if form.categorie.value == val or form.initial.categorie == val %}selected{% endif %}>{{ label }}</option>
+            {% endif %}{% endfor %}
+          </select>
+        </div>
+        <div class="field js-autre-field" hidden><label for="id_autre_categorie">Précisez la catégorie <span class="req">*</span></label>
+          <input type="text" name="autre_categorie" id="id_autre_categorie" class="input js-autre-input" placeholder="Ex: Achat fournitures" value="{{ form.autre_categorie.value|default:'' }}">
+        </div>
+        <div class="field"><label for="id_date_depense">Date <span class="req">*</span></label><input type="date" name="date_depense" id="id_date_depense" class="input" value="{{ form.date_depense.value|date:'Y-m-d'|default:form.date_depense.value|default:'' }}" required></div>
+        <div class="field"><label for="id_montant">Montant (FCFA) <span class="req">*</span></label><input type="number" name="montant" id="id_montant" class="input" placeholder="0" min="0" step="0.01" value="{{ form.montant.value|default:'' }}" required></div>
+        <div class="field col-span-full"><label for="id_description">Description</label><textarea name="description" id="id_description" rows="3" class="textarea" placeholder="Détails de la dépense (optionnel)">{{ form.description.value|default:'' }}</textarea></div>
+        <div class="field col-span-full"><label for="id_justificatif">Reçu (justificatif)</label>
+          {% if expense and expense.justificatif %}
+          <div class="note note-green mb-2 flex items-center gap-2">{% include "icons/paperclip.html" with cls="icon-sm" %}<span>Reçu actuel : <a class="text-blue" href="{{ expense.justificatif.url }}" target="_blank" rel="noopener">{{ expense.justificatif.name|truncatechars:34 }}</a></span></div>
+          {% endif %}
+          <input type="file" name="justificatif" id="id_justificatif" class="input" accept="image/*,.pdf">
+          <p class="field-help">Image (JPG, PNG) ou PDF.</p>
+        </div>
+      </div>
+      <div class="form-actions">
+        <a href="{% url 'expenses_list' %}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">{% if expense %}Enregistrer{% else %}Ajouter{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/expenses.js' %}"></script>{% endblock %}

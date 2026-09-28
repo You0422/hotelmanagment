@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ service.nom_service }} · HotelManagment{% endblock %}
+{% block content %}
+<div class="page-narrow is-sm stack">
+  <a href="{% url 'services_list' %}" class="back-link">{% include "icons/arrow-left.html" with cls="icon-sm" %}Retour aux services</a>
+  <div class="item-card">
+    <div class="item-card-head">
+      <div class="item-card-id">
+        <div class="item-card-icon is-indigo">{% include "icons/package.html" with cls="icon-lg" %}</div>
+        <div class="truncate">
+          <h1 class="item-card-title">{{ service.nom_service }}</h1>
+          <p class="item-card-price">{{ service.prix_service|floatformat:0|intcomma }} FCFA</p>
+        </div>
+      </div>
+    </div>
+    <p class="item-desc" style="-webkit-line-clamp: unset;">{{ service.description|default:"Aucune description" }}</p>
+    {% if is_admin %}
+    <div class="item-actions">
+      <a class="btn-soft btn-soft-blue" href="{% url 'service_update' service.id %}">{% include "icons/edit.html" with cls="icon-sm" %}<span>Modifier</span></a>
+      <a class="btn-soft btn-soft-red" href="{% url 'service_delete' service.id %}">{% include "icons/trash.html" with cls="icon-sm" %}<span>Supprimer</span></a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

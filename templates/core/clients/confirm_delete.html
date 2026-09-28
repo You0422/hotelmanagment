@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Supprimer un client · HotelManagment{% endblock %}
+{% block content %}
+{% url 'clients_list' as cancel_url %}
+{% with full_name=client.prenom|add:" "|add:client.nom %}
+{% include "core/partials/confirm_delete_page.html" with title="Supprimer "|add:full_name|add:" ?" message="Toutes les réservations et données associées à ce client seront également supprimées. Cette action ne peut pas être annulée." cancel_url=cancel_url %}
+{% endwith %}
+{% endblock %}

@@ -1,0 +1,115 @@
+{% load humanize %}
+{% comment %}Fenêtre « Nouvelle réservation » (même présentation que la démo). Contexte requis : clients, chambres_libres, services_catalog{% endcomment %}
+<div class="modal" id="reservationModal">
+  <div class="modal-panel is-lg resa-demo">
+    <div class="modal-head">
+      <h2 class="modal-title">Nouvelle réservation</h2>
+      <button type="button" class="modal-close" data-modal-close aria-label="Fermer">{% include "icons/x.html" with cls="icon-lg" %}</button>
+    </div>
+
+    <form method="post" action="{% url 'reservation_create' %}" id="reservationForm" class="resa-demo-form">
+      {% csrf_token %}
+      <input type="hidden" name="statut_reser" value="Confirmée">
+      <input type="checkbox" name="nouveau_client" value="on" id="nouveauClientCheck" hidden>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Client <span class="req">*</span></label>
+          <div class="hm-combo" data-combo data-combo-required>
+            <input type="hidden" name="client" data-combo-value>
+            <div class="hm-combo-control">
+              {% include "icons/search.html" with cls="icon-sm hm-combo-search" %}
+              <input type="text" class="input hm-combo-input" placeholder="Rechercher un client..." autocomplete="off" data-combo-input>
+              <span class="hm-combo-chevron" aria-hidden="true">{% include "icons/chevron-down.html" with cls="icon-sm" %}</span>
+            </div>
+            <div class="hm-combo-menu" data-combo-menu hidden>
+              <ul>
+                {% for c in clients %}
+                <li data-value="{{ c.pk }}" data-label="{{ c.prenom }} {{ c.nom }}"><strong>{{ c.prenom }} {{ c.nom }}</strong><span>{{ c.code_client }}{% if c.telephone %} · {{ c.telephone }}{% endif %}</span></li>
+                {% endfor %}
+              </ul>
+              <p class="hm-combo-empty" data-combo-empty hidden>Aucun résultat trouvé</p>
+              <button type="button" class="hm-combo-new" data-new-client>{% include "icons/user-plus.html" with cls="icon-sm" %}Nouveau client</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Chambre <span class="req">*</span></label>
+          <div class="hm-combo" data-combo data-combo-required>
+            <input type="hidden" name="chambre" data-combo-value id="chambreValue">
+            <div class="hm-combo-control">
+              {% include "icons/search.html" with cls="icon-sm hm-combo-search" %}
+              <input type="text" class="input hm-combo-input" placeholder="Rechercher une chambre..." autocomplete="off" data-combo-input>
+              <span class="hm-combo-chevron" aria-hidden="true">{% include "icons/chevron-down.html" with cls="icon-sm" %}</span>
+            </div>
+            <div class="hm-combo-menu" data-combo-menu hidden>
+              <ul>
+                {% for ch in chambres_libres %}
+                <li data-value="{{ ch.pk }}" data-prix="{{ ch.prix_nuit|floatformat:'0u' }}" data-label="Chambre {{ ch.numero_chambre }} - {{ ch.type_chambre }}"><strong>Chambre {{ ch.numero_chambre }} - {{ ch.type_chambre }}</strong><span>{{ ch.prix_nuit|floatformat:0|intcomma }} FCFA / nuit</span></li>
+                {% endfor %}
+              </ul>
+              <p class="hm-combo-empty" data-combo-empty hidden>Aucun résultat trouvé</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Nouveau client : affiché seulement si on choisit « Nouveau client » dans la liste #}
+      <div class="sub-card" id="nouveauClientFields" hidden>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-semibold">Nouveau client</p>
+          <button type="button" class="link-more text-sm" data-cancel-new-client>Choisir un client existant</button>
+        </div>
+        <div class="form-grid">
+          <div class="field"><input type="text" name="nouveau_prenom" class="input" placeholder="Prénom *"></div>
+          <div class="field"><input type="text" name="nouveau_nom" class="input" placeholder="Nom *"></div>
+          <div class="field">
+            <select name="nouveau_type_document" class="select">
+              <option value="">Type de pièce *</option>
+              <option value="CNI">Carte Nationale d'Identité</option>
+              <option value="Passeport">Passeport</option>
+            </select>
+          </div>
+          <div class="field"><input type="text" name="nouveau_numero_document" class="input" placeholder="N° de la pièce *"></div>
+          <div class="field"><input type="tel" name="nouveau_telephone" class="input" placeholder="Téléphone"></div>
+          <div class="field"><input type="email" name="nouveau_email" class="input" placeholder="Email"></div>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field"><label>Date d'entrée <span class="req">*</span></label><input type="date" name="date_arrivee" class="input" required></div>
+        <div class="field"><label>Date de sortie <span class="req">*</span></label><input type="date" name="date_depart" class="input" required></div>
+      </div>
+
+      {% if services_catalog %}
+      <div class="field">
+        <label>Services supplémentaires</label>
+        <div class="resa-services">
+          {% for s in services_catalog %}
+          <label class="resa-service">
+            <input type="checkbox" name="services" value="{{ s.nom }}" class="service-checkbox" data-prix="{{ s.prix|floatformat:'0u' }}">
+            <span class="resa-service-name">{{ s.nom }}</span>
+            <span class="resa-service-price">{{ s.prix|floatformat:0|intcomma }} FCFA</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="resa-calc">
+        <h3>Détail du calcul</h3>
+        <div class="resa-calc-row"><span>Nombre de nuits:</span><strong id="apercuNuits">0</strong></div>
+        <div class="resa-calc-row"><span>Prix par nuit:</span><strong id="apercuPrixNuit">0 FCFA</strong></div>
+        <div class="resa-calc-row is-sep"><span>Total chambres:</span><strong id="apercuTotalChambres">0 FCFA</strong></div>
+        <div class="resa-calc-row" {% if not services_catalog %}hidden{% endif %}><span>Services:</span><strong id="apercuTotalServices">0 FCFA</strong></div>
+        <div class="resa-calc-total"><span>Total TTC:</span><span id="apercuTotal">0 FCFA</span></div>
+      </div>
+
+      <div class="resa-demo-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Créer</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4">Détail Rapport</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'reports' %}">Retour</a>
+</div>
+<div class="card p-3" style="max-width:720px;">
+  <dl class="row">
+    <dt class="col-sm-4">Taux d'occupation</dt><dd class="col-sm-8">{{ taux_occupation }} %</dd>
+    <dt class="col-sm-4">Recettes</dt><dd class="col-sm-8">{{ total_recettes }} FCFA</dd>
+    <dt class="col-sm-4">Dépenses</dt><dd class="col-sm-8">{{ total_depenses }} FCFA</dd>
+    <dt class="col-sm-4">Bénéfice net</dt><dd class="col-sm-8">{{ benefice_net }} FCFA</dd>
+  </dl>
+</div>
+{% endblock %}

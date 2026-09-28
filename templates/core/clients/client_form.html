@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{% if client %}Modifier le client{% else %}Nouveau client{% endif %} · HotelManagment{% endblock %}
+{% block content %}
+<div class="page-narrow">
+
+  <div class="panel p-6">
+    {% url 'clients_list' as back_url %}
+    {% if client %}{% include "core/partials/page_form_head.html" with title="Modifier le client" back_url=back_url %}{% else %}{% include "core/partials/page_form_head.html" with title="Ajouter un client" back_url=back_url %}{% endif %}
+    <form method="post" class="form-body">
+      {% csrf_token %}
+      {% include "core/partials/form_errors.html" %}
+      {% if form.is_bound %}{% include "core/clients/_fields.html" with c=form.data code=client.code_client %}{% else %}{% include "core/clients/_fields.html" with c=form.instance code=client.code_client %}{% endif %}
+      <div class="resa-demo-actions mt-4">
+        <a href="{% url 'clients_list' %}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">{% if client %}Mettre à jour{% else %}Ajouter{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

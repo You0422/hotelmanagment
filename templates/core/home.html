@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Tableau de bord</h1>
+<div class="row g-3">
+  <div class="col-12 col-md-6">
+    <div class="card p-3">
+      <h2 class="h6">Navigation rapide</h2>
+      <ul class="list-unstyled mb-0">
+        <li><a href="/chambres/">Chambres</a></li>
+        <li><a href="/clients/">Clients</a></li>
+        <li><a href="/reservations/">Réservations</a></li>
+        <li><a href="/depenses/">Dépenses</a></li>
+        <li><a href="/rapports/">Rapports</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-12 col-md-6">
+    <div class="card p-3">
+      <h2 class="h6">Statistiques récentes</h2>
+      <ul class="list-unstyled mb-0">
+        <li>Chambres occupées: {{ stats.chambres_occupees }}</li>
+        <li>Clients enregistrés: {{ stats.clients_enregistres }}</li>
+        <li>Réservations en cours: {{ stats.reservations_en_cours }}</li>
+        <li>Dépenses ce mois: {{ stats.depenses_mois }} FCFA</li>
+      </ul>
+    </div>
+  </div>
+{% endblock %}

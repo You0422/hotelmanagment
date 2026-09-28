@@ -1,0 +1,23 @@
+{# Répartition des chambres par type : anneau + légende chiffrée (couleur fixe par type) #}
+<div class="panel-lg p-6">
+  <h2 class="panel-title">Répartition des Chambres par Type</h2>
+  <p class="panel-hint">Composition du parc de chambres</p>
+  {% if repartition_chambres %}
+  <div class="donut-layout">
+    <div class="donut-box">
+      <canvas id="chartRepartition" aria-label="Répartition des chambres par type" role="img"></canvas>
+      <div class="donut-center"><strong>{{ total_rooms }}</strong><span>chambre{{ total_rooms|pluralize }}</span></div>
+    </div>
+    <div class="legend-list">
+      {% for t in repartition_chambres %}
+      <div class="legend-item">
+        <span class="legend-item-left"><span class="legend-swatch" style="background: {% if t.type_chambre == 'Simple' %}var(--series-1){% elif t.type_chambre == 'Double' %}var(--series-2){% elif t.type_chambre == 'Suite' %}var(--series-3){% elif t.type_chambre == 'Dortoir' %}var(--series-4){% else %}var(--gray-400){% endif %};"></span>{{ t.type_chambre }}</span>
+        <span class="legend-value"><strong>{{ t.nb }}</strong><small>{% widthratio t.nb total_rooms 100 %} %</small></span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="empty">{% include "icons/hotel.html" with cls="icon-empty" %}<p>Aucune chambre enregistrée</p></div>
+  {% endif %}
+</div>

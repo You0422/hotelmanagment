@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{% if room %}Modifier la chambre{% else %}Ajouter une chambre{% endif %} · HotelManagment{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <div class="panel p-6">
+    {% url 'rooms_list' as back_url %}
+    {% if room %}{% include "core/partials/page_form_head.html" with title="Modifier la chambre" back_url=back_url %}{% else %}{% include "core/partials/page_form_head.html" with title="Ajouter une chambre" back_url=back_url %}{% endif %}
+    <form method="post" class="form-body">
+      {% csrf_token %}
+      {% include "core/partials/form_errors.html" %}
+      {% if form.is_bound %}{% include "core/chambres/_fields.html" with r=form.data %}{% else %}{% include "core/chambres/_fields.html" with r=form.instance %}{% endif %}
+      <div class="form-actions">
+        <a href="{% url 'rooms_list' %}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">{% if room %}Enregistrer{% else %}Ajouter{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load humanize static %}
+{% block title %}Dépenses · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Gestion des dépenses</h1>
+    <p class="page-subtitle">Suivez toutes vos dépenses</p>
+  </div>
+  <button type="button" class="btn btn-primary btn-lg" data-modal-open="#expenseModal">{% include "icons/plus.html" with cls="icon" %}Ajouter une dépense</button>
+</div>
+
+<div class="total-box">
+  <div class="total-box-icon">{% include "icons/trending-down.html" with cls="icon-xl" %}</div>
+  <div>
+    <p class="total-box-label">Total des dépenses{% if cat or q %} (filtre appliqué){% endif %}</p>
+    <p class="total-box-value"><span id="expensesTotal">0</span> FCFA</p>
+  </div>
+</div>
+
+<div class="panel p-4 stack-sm">
+  <div class="filter-bar">
+    <a href="?q={{ q|urlencode }}" class="pill {% if not cat %}is-active{% endif %}">Toutes</a>
+    {% for val, label in categories %}{% if val != 'Toute' %}
+    <a href="?q={{ q|urlencode }}&cat={{ val|urlencode }}" class="pill {% if cat == val %}is-active{% endif %}">{{ label }}</a>
+    {% endif %}{% endfor %}
+  </div>
+  <form method="get" class="search-row">
+    <input type="hidden" name="cat" value="{{ cat }}">
+    <div class="search-box">
+      {% include "icons/search.html" with cls="icon" %}
+      <input type="text" name="q" value="{{ q }}" placeholder="Rechercher dans les descriptions..." class="input">
+    </div>
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+    {% if q or cat %}<a href="{% url 'expenses_list' %}" class="btn btn-outline">Effacer</a>{% endif %}
+  </form>
+</div>
+
+<div class="panel overflow-hidden">
+  {% if expenses %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Catégorie</th><th>Description</th><th>Montant</th><th>Reçu</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for e in expenses %}
+        <tr data-montant="{{ e.montant|floatformat:'-2u' }}">
+          <td class="nowrap">{{ e.date_depense|date:"d/m/Y" }}</td>
+          <td><span class="badge badge-orange">{{ e.categorie }}</span></td>
+          <td class="text-muted">{{ e.description|default:"—"|truncatewords:10 }}</td>
+          <td class="t-red nowrap">{{ e.montant|floatformat:0|intcomma }} FCFA</td>
+          <td>{% if e.justificatif %}<a href="{{ e.justificatif.url }}" target="_blank" rel="noopener" class="icon-btn icon-btn-gray" title="Voir le reçu">{% include "icons/paperclip.html" with cls="icon-sm" %}</a>{% else %}<span class="t-muted">—</span>{% endif %}</td>
+          <td>
+            <div class="icon-actions">
+              <button type="button" class="icon-btn icon-btn-indigo" title="Détails" data-modal-open="#detailExp{{ e.pk }}">{% include "icons/eye.html" with cls="icon-sm" %}</button>
+              <button type="button" class="icon-btn icon-btn-blue" title="Modifier" data-modal-open="#editExp{{ e.pk }}">{% include "icons/edit.html" with cls="icon-sm" %}</button>
+              <button type="button" class="icon-btn icon-btn-red" title="Supprimer" data-modal-open="#delExp{{ e.pk }}">{% include "icons/trash.html" with cls="icon-sm" %}</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    {% include "icons/trending-down.html" with cls="icon-empty" %}
+    <h3>Aucune dépense</h3>
+    <p>{% if q or cat %}Aucune dépense ne correspond à vos filtres{% else %}Commencez par enregistrer vos dépenses{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+
+{% for e in expenses %}
+<div class="modal" id="detailExp{{ e.pk }}">
+  <div class="modal-panel">
+    <div class="modal-head">
+      <h2 class="modal-title">Dépense du {{ e.date_depense|date:"d/m/Y" }}</h2>
+      <button type="button" class="modal-close" data-modal-close aria-label="Fermer">{% include "icons/x.html" with cls="icon-lg" %}</button>
+    </div>
+    <div class="modal-body">
+      <div class="kv">
+        <div class="kv-item"><p class="kv-label">Catégorie</p><p class="kv-value"><span class="badge badge-orange">{{ e.categorie }}</span></p></div>
+        <div class="kv-item"><p class="kv-label">Montant</p><p class="kv-value text-red">{{ e.montant|floatformat:0|intcomma }} FCFA</p></div>
+        <div class="kv-item"><p class="kv-label">Date</p><p class="kv-value">{{ e.date_depense|date:"d/m/Y" }}</p></div>
+        <div class="kv-item"><p class="kv-label">Reçu</p><p class="kv-value">{% if e.justificatif %}<a class="text-blue" href="{{ e.justificatif.url }}" target="_blank" rel="noopener">Voir le fichier</a>{% else %}—{% endif %}</p></div>
+      </div>
+      {% if e.description %}<div class="note note-gray"><p class="note-label">Description</p><p class="note-value">{{ e.description }}</p></div>{% endif %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Fermer</button>
+        <button type="button" class="btn btn-primary" data-modal-open="#editExp{{ e.pk }}" data-modal-swap>Modifier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editExp{{ e.pk }}">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Modifier la dépense" %}
+    <form method="post" action="{% url 'expenses_update' e.pk %}" enctype="multipart/form-data" class="form-body">
+      {% csrf_token %}
+      {% include "core/expenses/_fields.html" %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% url 'expenses_delete' e.pk as delete_url %}
+{% with pk_s=e.pk|stringformat:"s" montant_s=e.montant|floatformat:0 %}
+{% include "core/partials/confirm_delete_modal.html" with modal_id="delExp"|add:pk_s action=delete_url title="Supprimer cette dépense ?" message=e.categorie|add:" — "|add:montant_s|add:" FCFA" %}
+{% endwith %}
+{% endfor %}
+
+<div class="modal" id="expenseModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Ajouter une dépense" %}
+    <form method="post" action="{% url 'expenses_create' %}" enctype="multipart/form-data" class="form-body">
+      {% csrf_token %}
+      {% include "core/expenses/_fields.html" with e=None %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/expenses.js' %}"></script>
+<script>
+(function () {
+  var total = 0;
+  document.querySelectorAll('tr[data-montant]').forEach(function (row) { total += parseFloat(row.getAttribute('data-montant')) || 0; });
+  document.getElementById('expensesTotal').textContent = Math.round(total).toLocaleString('fr-FR');
+})();
+</script>
+{% endblock %}

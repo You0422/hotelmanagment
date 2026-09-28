@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Clients · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Gestion des Clients</h1>
+    <p class="page-subtitle">Gérez votre base de clientèle</p>
+  </div>
+  {% if is_admin %}
+  <button type="button" class="btn btn-primary btn-lg" data-modal-open="#clientModal">{% include "icons/plus.html" with cls="icon" %}Ajouter un client</button>
+  {% endif %}
+</div>
+
+<div class="grid-4">
+  <div class="stat-card-border accent-blue">
+    <div><p class="stat-label">Clients totaux</p><p class="stat-value">{{ stats.total }}</p></div>
+    <div class="stat-icon-soft">{% include "icons/users.html" with cls="icon-lg" %}</div>
+  </div>
+  <div class="stat-card-border accent-green">
+    <div><p class="stat-label">Clients actifs</p><p class="stat-value">{{ stats.actifs }}</p></div>
+    <div class="stat-icon-soft">{% include "icons/check-circle.html" with cls="icon-lg" %}</div>
+  </div>
+  <div class="stat-card-border accent-gold">
+    <div><p class="stat-label">Clients réguliers</p><p class="stat-value">{{ stats.reguliers }}</p></div>
+    <div class="stat-icon-soft">{% include "icons/star.html" with cls="icon-lg" %}</div>
+  </div>
+  <div class="stat-card-border accent-purple">
+    <div><p class="stat-label">Nouveaux ce mois</p><p class="stat-value">{{ stats.nouveaux_mois }}</p></div>
+    <div class="stat-icon-soft">{% include "icons/users.html" with cls="icon-lg" %}</div>
+  </div>
+</div>
+
+<div class="panel-lg p-2 client-tabs">
+  <a href="?q={{ q|urlencode }}" class="pill {% if filtre != 'reguliers' %}is-active{% endif %}">Tous les clients</a>
+  <a href="?q={{ q|urlencode }}&filtre=reguliers" class="pill pill-amber {% if filtre == 'reguliers' %}is-active{% endif %}">{% include "icons/star.html" with cls="icon-sm" %}Clients réguliers ({{ stats.reguliers }})</a>
+</div>
+
+<div class="panel-lg p-4">
+  <form method="get" class="search-row">
+    {% if filtre == 'reguliers' %}<input type="hidden" name="filtre" value="reguliers">{% endif %}
+    <div class="search-box">
+      {% include "icons/search.html" with cls="icon" %}
+      <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par nom, email, numéro..." class="input">
+    </div>
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+    {% if q %}<a href="{% url 'clients_list' %}" class="btn btn-outline">Effacer</a>{% endif %}
+  </form>
+</div>
+
+{% if clients %}
+<div class="grid-3 gap-6">
+  {% for c in clients %}
+  {% include "core/clients/_card.html" %}
+
+  <div class="modal" id="detailClientModal{{ c.pk }}">
+    <div class="modal-panel is-md demo-detail">
+      <div class="modal-head">
+        <h2 class="modal-title">Détails du client</h2>
+        <div class="modal-head-actions">
+          <a href="{% url 'client_pdf' c.pk %}" class="icon-btn icon-btn-blue" title="Télécharger la fiche" download>{% include "icons/download.html" with cls="icon" %}</a>
+          <button type="button" class="modal-close" data-modal-close aria-label="Fermer">{% include "icons/x.html" with cls="icon-lg" %}</button>
+        </div>
+      </div>
+      <div class="stack">
+        <div>
+          <h3 class="detail-section-title">Informations personnelles</h3>
+          <div class="kv">
+            <div class="kv-item col-span-full"><p class="kv-label">Numéro client</p><p class="kv-value">{{ c.code_client }}</p></div>
+            <div class="kv-item"><p class="kv-label">Prénom</p><p class="kv-value">{{ c.prenom }}</p></div>
+            <div class="kv-item"><p class="kv-label">Nom</p><p class="kv-value">{{ c.nom }}</p></div>
+            <div class="kv-item col-span-full"><p class="kv-label">Email</p><p class="kv-value break-all">{{ c.email|default:"" }}</p></div>
+            <div class="kv-item"><p class="kv-label">Téléphone</p><p class="kv-value">{{ c.telephone }}</p></div>
+            <div class="kv-item col-span-full"><p class="kv-label">Adresse</p><p class="kv-value">{{ c.adresse }}</p></div>
+          </div>
+        </div>
+        {% if c.numero_document %}
+        <div>
+          <h3 class="detail-section-title">Documents</h3>
+          <div class="note note-blue"><p class="note-label">{% if c.type_document == 'CNI' %}Carte d'identité{% else %}Passeport{% endif %}</p><p class="note-value">{{ c.numero_document }}</p></div>
+        </div>
+        {% endif %}
+        {% if c.date_entree or c.date_sortie %}
+        <div>
+          <h3 class="detail-section-title">Période de séjour</h3>
+          <div class="kv">
+            {% if c.date_entree %}<div class="note note-green"><p class="note-label">Date d'entrée</p><p class="note-value">{{ c.date_entree|date:"d/m/Y" }}</p></div>{% endif %}
+            {% if c.date_sortie %}<div class="note note-red"><p class="note-label">Date de sortie</p><p class="note-value">{{ c.date_sortie|date:"d/m/Y" }}</p></div>{% endif %}
+          </div>
+        </div>
+        {% endif %}
+        <div>
+          <h3 class="detail-section-title">Statut</h3>
+          {% if c.statut_sejour == 'Actif' %}<span class="badge badge-lg badge-green">✓ Actif</span>{% else %}<span class="badge badge-lg badge-gray">Inactif</span>{% endif %}
+        </div>
+        <div class="kv-item"><p class="kv-label">Client depuis</p><p class="kv-value">{{ c.date_creation|date:"d/m/Y" }}</p></div>
+      </div>
+      <button type="button" class="btn btn-primary btn-block mt-6" data-modal-close>Fermer</button>
+    </div>
+  </div>
+
+  {% if is_admin %}
+  <div class="modal" id="editClientModal{{ c.pk }}">
+    <div class="modal-panel is-lg">
+      {% include "core/partials/modal_head.html" with title="Modifier le client" %}
+      <form method="post" action="{% url 'client_update' c.pk %}">
+        {% csrf_token %}
+        {% include "core/clients/_fields.html" with code=c.code_client %}
+        <div class="resa-demo-actions mt-4">
+          <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+          <button type="submit" class="btn btn-primary">Mettre à jour</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% url 'client_delete' c.pk as delete_url %}
+  {% with pk_s=c.pk|stringformat:"s" full_name=c.prenom|add:" "|add:c.nom %}
+  {% include "core/partials/confirm_delete_modal.html" with modal_id="deleteClientModal"|add:pk_s action=delete_url title="Supprimer "|add:full_name|add:" ?" message="Cette action est irréversible. Les réservations de ce client seront également supprimées." %}
+  {% endwith %}
+  {% endif %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel-lg empty">
+  {% include "icons/users.html" with cls="icon-empty" %}
+  <h3>Aucun client trouvé</h3>
+  <p>{% if q %}Aucun client ne correspond à votre recherche{% else %}Commencez par ajouter votre premier client{% endif %}</p>
+</div>
+{% endif %}
+
+{% if is_admin %}
+<div class="modal" id="clientModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Ajouter un client" %}
+    <form method="post" action="{% url 'client_create' %}">
+      {% csrf_token %}
+      {% include "core/clients/_fields.html" with c=None code=prochain_code %}
+      <div class="resa-demo-actions mt-4">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

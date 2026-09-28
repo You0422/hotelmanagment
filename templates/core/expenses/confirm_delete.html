@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Supprimer une dépense · HotelManagment{% endblock %}
+{% block content %}
+{% url 'expenses_list' as cancel_url %}
+{% with montant_s=expense.montant|floatformat:0 %}
+{% include "core/partials/confirm_delete_page.html" with title="Supprimer cette dépense ?" message=expense.categorie|add:" — "|add:montant_s|add:" FCFA. Cette action est irréversible." cancel_url=cancel_url %}
+{% endwith %}
+{% endblock %}

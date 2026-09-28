@@ -1,0 +1,13 @@
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div>
+        <div class="fw-semibold">{{ s.nom_service }}</div>
+        <div class="text-muted small">{{ s.description|truncatechars:60 }}</div>
+      </div>
+      <div class="text-end">
+        <div class="fw-semibold">{{ s.prix_service }}</div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Chambre {{ room.numero_chambre }} · HotelManagment{% endblock %}
+{% block content %}
+<a href="{% url 'rooms_list' %}" class="back-link">{% include "icons/arrow-left.html" with cls="icon-sm" %}Retour aux chambres</a>
+
+<div class="page-header">
+  <div class="detail-head">
+    <div class="item-card-icon is-blue">{% include "icons/bed.html" with cls="icon-lg" %}</div>
+    <div>
+      <h1 class="page-title">Chambre {{ room.numero_chambre }}</h1>
+      <p class="page-subtitle">{{ room.type_chambre }}</p>
+    </div>
+  </div>
+  {% if is_admin %}
+  <div class="page-actions">
+    <a class="btn btn-soft btn-soft-blue" href="{% url 'room_update' room.id %}">{% include "icons/edit.html" with cls="icon-sm" %}Modifier</a>
+    <a class="btn btn-soft btn-soft-red" href="{% url 'room_delete' room.id %}">{% include "icons/trash.html" with cls="icon-sm" %}Supprimer</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="detail-grid">
+  <div class="panel p-6">
+    <h2 class="form-section-title">Informations</h2>
+    <div class="kv">
+      <div class="kv-item"><p class="kv-label">Numéro</p><p class="kv-value">{{ room.numero_chambre }}</p></div>
+      <div class="kv-item"><p class="kv-label">Type</p><p class="kv-value">{{ room.type_chambre }}</p></div>
+      <div class="kv-item"><p class="kv-label">Prix par nuit</p><p class="kv-value text-blue">{{ room.prix_nuit|intcomma }} FCFA</p></div>
+      <div class="kv-item"><p class="kv-label">Statut</p><p class="kv-value"><span class="badge {% if room.statut_actuel == 'Libre' %}badge-green{% elif room.statut_actuel == 'Occupée' %}badge-red{% elif room.statut_actuel == 'En maintenance' %}badge-yellow{% else %}badge-gray{% endif %}">{{ room.statut_actuel }}</span></p></div>
+    </div>
+    <div class="note note-blue mt-4"><p class="note-label">Description / équipements</p><p class="note-value">{{ room.description|default:"—" }}</p></div>
+  </div>
+  <div class="panel p-6">
+    <h2 class="form-section-title">Actions rapides</h2>
+    <div class="form-stack">
+      <a class="btn btn-primary btn-block" href="{% url 'reservation_create' %}?chambre={{ room.id }}">{% include "icons/plus.html" with cls="icon-sm" %}Nouvelle réservation</a>
+      <a class="btn btn-outline btn-block" href="{% url 'rooms_list' %}">Retour à la liste</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

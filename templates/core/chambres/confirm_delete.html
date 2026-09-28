@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Supprimer une chambre · HotelManagment{% endblock %}
+{% block content %}
+{% url 'rooms_list' as cancel_url %}
+{% include "core/partials/confirm_delete_page.html" with title="Supprimer la chambre "|add:room.numero_chambre|add:" ?" message="Cette action est irréversible. Les réservations liées à cette chambre seront également supprimées." cancel_url=cancel_url %}
+{% endblock %}

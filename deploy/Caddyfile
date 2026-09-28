@@ -1,0 +1,22 @@
+# HTTPS automatique (Let's Encrypt) et redirection vers l'application
+{$DOMAINE} {
+	tls {$EMAIL_ADMIN}
+
+	encode gzip
+
+	# Logos, justificatifs et pièces jointes jusqu'à 10 Mo
+	request_body {
+		max_size 10MB
+	}
+
+	reverse_proxy web:8080 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	log {
+		output file /data/acces.log {
+			roll_size 10MB
+			roll_keep 5
+		}
+	}
+}

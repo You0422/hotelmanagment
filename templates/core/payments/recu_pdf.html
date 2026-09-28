@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Reçu {{ numero }}</title>
+  <style>
+    @page { size: A4; margin: 8mm 12mm; }
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; line-height: 1.2; color: #1e293b; }
+    p { margin: 0; padding: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 0; vertical-align: top; }
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .muted { color: #64748b; }
+    .hotel-name { font-size: 12pt; font-weight: bold; color: #14532d; }
+    .doc-title { font-size: 16pt; font-weight: bold; color: #16a34a; }
+    .doc-num { font-size: 9pt; font-weight: bold; }
+    .copy { font-size: 7pt; color: #ffffff; background-color: #16a34a; padding: 2px 6px 1px 6px; }
+    .band td { background-color: #16a34a; font-size: 2pt; line-height: 2pt; }
+    .amount { background-color: #f0fdf4; border: 0.8pt solid #86efac; padding: 8px 10px 6px 10px; }
+    .amount-value { font-size: 18pt; font-weight: bold; color: #15803d; }
+    .kv td { padding: 3px 6px 2px 6px; border-bottom: 0.4pt solid #e2e8f0; }
+    .kv .label { color: #64748b; width: 38%; }
+    .box-title { font-size: 7pt; font-weight: bold; color: #15803d; padding: 4px 6px 2px 6px; background-color: #f0fdf4; }
+    .green { color: #16a34a; }
+    .red { color: #dc2626; }
+    .foot { font-size: 6.5pt; color: #64748b; text-align: center; }
+    .cut td { border-bottom: 0.6pt dashed #94a3b8; font-size: 2pt; line-height: 2pt; }
+  </style>
+</head>
+<body>
+{% for exemplaire in "12" %}
+  <table>
+    <tr>
+      {% if hotel.logo %}<td style="width:20mm;"><img src="{{ hotel.logo.path }}" style="height:16mm;"></td>{% endif %}
+      <td>
+        <p class="hotel-name">{{ hotel.nom_etablissement|default:"HotelManagment" }}</p>
+        {% if hotel.adresse %}<p class="muted">{{ hotel.adresse }}</p>{% endif %}
+        <p class="muted">{% if hotel.telephone %}Tél : {{ hotel.telephone }}{% endif %}{% if hotel.telephone and hotel.email %} · {% endif %}{% if hotel.email %}{{ hotel.email }}{% endif %}</p>
+        {% if hotel.ifu or hotel.rccm %}<p class="muted">{% if hotel.ifu %}IFU : {{ hotel.ifu }}{% endif %}{% if hotel.ifu and hotel.rccm %} · {% endif %}{% if hotel.rccm %}RCCM : {{ hotel.rccm }}{% endif %}</p>{% endif %}
+      </td>
+      <td class="right" style="width:62mm;">
+        <p class="doc-title">REÇU DE PAIEMENT</p>
+        <p class="doc-num">N° {{ numero }}</p>
+        <p class="muted">Le {{ p.date_paiement|date:"d/m/Y à H:i" }}</p>
+        <p style="padding-top:2px;"><span class="copy">{% if forloop.first %}COPIE CLIENT{% else %}COPIE HÔTEL{% endif %}</span></p>
+      </td>
+    </tr>
+  </table>
+  <table class="band" style="margin-top:4px;"><tr><td>&nbsp;</td></tr></table>
+
+  <table style="margin-top:8px;">
+    <tr>
+      <td style="width:55%; padding-right:10px;">
+        <p class="box-title">REÇU DE</p>
+        <table class="kv">
+          <tr><td class="label">Client</td><td><b>{{ r.client.prenom }} {{ r.client.nom }}</b>{% if r.client.code_client %} <span class="muted">({{ r.client.code_client }})</span>{% endif %}</td></tr>
+          <tr><td class="label">Pour</td><td>Réservation #{{ r.id }} · Chambre {{ r.chambre.numero_chambre }}</td></tr>
+          <tr><td class="label">Séjour</td><td>du {{ r.date_arrivee|date:"d/m/Y" }} au {{ r.date_depart|date:"d/m/Y" }}</td></tr>
+          <tr><td class="label">Mode de paiement</td><td><b>{{ p.get_methode_paiement_display }}</b></td></tr>
+          <tr><td class="label">Référence</td><td>{{ p.reference_paiement|default:"—" }}</td></tr>
+        </table>
+      </td>
+      <td style="width:45%;">
+        <div class="amount">
+          <p class="muted">Montant reçu</p>
+          <p class="amount-value">{{ montant }} FCFA</p>
+        </div>
+        <table class="kv" style="margin-top:6px;">
+          <tr><td class="label">Total de la facture</td><td class="right">{{ total_facture }} F</td></tr>
+          <tr><td class="label">Déjà payé</td><td class="right green"><b>{{ total_paye }} F</b></td></tr>
+          <tr><td class="label">Reste à payer</td><td class="right {% if est_solde %}green{% else %}red{% endif %}"><b>{{ solde_du }} F</b></td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <table style="margin-top:14px;">
+    <tr>
+      <td class="muted" style="width:50%;">Signature du client</td>
+      <td class="muted right">Le caissier / Cachet de l'établissement</td>
+    </tr>
+  </table>
+  <p class="foot" style="padding-top:26px;">Ce reçu atteste du paiement ci-dessus. Merci de votre confiance.</p>
+
+  {% if forloop.first %}<table class="cut" style="margin:10px 0 12px 0;"><tr><td>&nbsp;</td></tr></table>{% endif %}
+{% endfor %}
+</body>
+</html>

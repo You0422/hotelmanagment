@@ -1,0 +1,22 @@
+{# Champs de la chambre (format commun). Paramètre facultatif : r (chambre existante) #}
+<div class="form-grid">
+  <div class="field"><label>Numéro de chambre <span class="req">*</span></label><input type="text" name="numero_chambre" class="input" placeholder="Ex: 101" value="{{ r.numero_chambre|default:'' }}" required></div>
+  <div class="field"><label>Type <span class="req">*</span></label>
+    <select name="type_chambre" class="select" required>
+      <option value="Simple" {% if r.type_chambre == 'Simple' %}selected{% endif %}>Simple</option>
+      <option value="Double" {% if r.type_chambre == 'Double' %}selected{% endif %}>Double</option>
+      <option value="Suite" {% if r.type_chambre == 'Suite' %}selected{% endif %}>Suite</option>
+      <option value="Dortoir" {% if r.type_chambre == 'Dortoir' %}selected{% endif %}>Dortoir</option>
+    </select>
+  </div>
+  <div class="field"><label>Prix par nuit (FCFA) <span class="req">*</span></label><input type="number" name="prix_nuit" class="input" placeholder="Ex: 25000" min="0" step="1" value="{{ r.prix_nuit|floatformat:'0u'|default:'' }}" required></div>
+  <div class="field"><label>Statut <span class="req">*</span></label>
+    <select name="statut_actuel" class="select" required>
+      <option value="Libre" {% if r.statut_actuel == 'Libre' %}selected{% endif %}>Libre</option>
+      <option value="Occupée" {% if r.statut_actuel == 'Occupée' %}selected{% endif %}>Occupée</option>
+      <option value="En maintenance" {% if r.statut_actuel == 'En maintenance' %}selected{% endif %}>En maintenance</option>
+      <option value="Hors service" {% if r.statut_actuel == 'Hors service' %}selected{% endif %}>Hors service</option>
+    </select>
+  </div>
+  <div class="field col-span-full"><label>Description</label><textarea name="description" rows="3" class="textarea" placeholder="Équipements (Ex: Clim, Wi-Fi, Balcon...)">{{ r.description|default:'' }}</textarea></div>
+</div>

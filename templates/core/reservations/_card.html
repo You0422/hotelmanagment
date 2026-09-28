@@ -1,0 +1,14 @@
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div>
+        <div class="fw-semibold">{{ r.client }}</div>
+        <div class="text-muted small">Chambre: {{ r.chambre.numero_chambre }}</div>
+      </div>
+      <div class="text-end">
+        <div class="small text-muted">{{ r.date_arrivee }} → {{ r.date_depart }}</div>
+        <div class="fw-semibold">{{ r.statut_reser }}</div>
+      </div>
+    </div>
+  </div>
+</div>

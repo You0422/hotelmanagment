@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load humanize static %}
+{% block title %}Réservations · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Réservations</h1>
+    <p class="page-subtitle">Gérez les réservations et séjours</p>
+  </div>
+  <button type="button" class="btn btn-primary btn-lg" data-modal-open="#reservationModal">{% include "icons/plus.html" with cls="icon" %}Nouvelle réservation</button>
+</div>
+
+<div class="panel p-4">
+  <div class="filter-bar">
+    <a href="{% url 'reservations_list' %}" class="pill {% if not status %}is-active{% endif %}">Toutes</a>
+    <a href="?status=Confirm%C3%A9e" class="pill {% if status == 'Confirmée' %}is-active{% endif %}">Confirmées</a>
+    <a href="?status=En%20cours" class="pill pill-green {% if status == 'En cours' %}is-active{% endif %}">En cours</a>
+    <a href="?status=Termin%C3%A9e" class="pill pill-gray {% if status == 'Terminée' %}is-active{% endif %}">Terminées</a>
+    <a href="?status=Annul%C3%A9e" class="pill pill-red {% if status == 'Annulée' %}is-active{% endif %}">Annulées</a>
+  </div>
+</div>
+
+<div class="panel overflow-hidden">
+  {% if reservations %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>Client</th><th>Chambre</th><th>Entrée</th><th>Sortie</th><th>Total</th><th>Payé</th><th>Solde</th><th>Statut</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for r in reservations %}
+        <tr>
+          <td><div class="t-strong truncate">{{ r.client.prenom }} {{ r.client.nom }}</div><div class="t-muted">{{ r.client.code_client }}</div></td>
+          <td>{{ r.chambre.numero_chambre }}<div class="t-muted">{{ r.chambre.type_chambre }}</div></td>
+          <td class="nowrap">{{ r.date_arrivee|date:"d/m/Y" }}</td>
+          <td class="nowrap">{{ r.date_depart|date:"d/m/Y" }}<div class="t-muted">{{ r.nb_nuits }} nuit{{ r.nb_nuits|pluralize }}</div></td>
+          <td class="t-strong nowrap">{{ r.total_chambre|add:r.total_services|intcomma }} FCFA</td>
+          <td class="nowrap">{{ r.total_paye|floatformat:0|intcomma }} FCFA</td>
+          <td class="nowrap {% if r.solde_du > 0 %}t-red{% else %}t-green{% endif %}">{{ r.solde_du|floatformat:0|intcomma }} FCFA</td>
+          <td>{% include "core/partials/reservation_badge.html" with statut=r.statut_reser %}</td>
+          <td>
+            <div class="icon-actions">
+              {% if r.statut_reser == 'Confirmée' %}
+              <form method="post" action="{% url 'reservation_checkin' r.pk %}">{% csrf_token %}
+                <button type="submit" class="icon-btn icon-btn-green" title="Check-in">{% include "icons/log-in.html" with cls="icon-sm" %}</button>
+              </form>
+              {% endif %}
+              <a href="{% url 'reservation_detail' r.pk %}" class="icon-btn icon-btn-blue" title="Détails">{% include "icons/eye.html" with cls="icon-sm" %}</a>
+              <a href="{% url 'reservation_invoice' r.pk %}" class="icon-btn icon-btn-indigo" title="Facture" target="_blank" rel="noopener">{% include "icons/file-text.html" with cls="icon-sm" %}</a>
+              {% if r.statut_reser == 'En cours' %}
+              <form method="post" action="{% url 'reservation_checkout' r.pk %}" data-confirm="Êtes-vous sûr de vouloir faire le check-out ?">{% csrf_token %}
+                <button type="submit" class="icon-btn icon-btn-orange" title="Check-out">{% include "icons/log-out.html" with cls="icon-sm" %}</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    {% include "icons/calendar.html" with cls="icon-empty" %}
+    <h3>Aucune réservation</h3>
+    <p>{% if status %}Aucune réservation avec ce statut{% else %}Commencez par créer votre première réservation{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+
+{% include "core/reservations/_create_modal.html" %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/reservation_form.js' %}"></script>
+{% endblock %}

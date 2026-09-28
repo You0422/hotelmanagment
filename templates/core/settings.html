@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Paramètres de l'établissement</h1>
+<form method="post" enctype="multipart/form-data" class="card p-3" style="max-width: 640px;">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <div>
+    <button class="btn btn-primary">Enregistrer</button>
+    <a href="/" class="btn btn-link">Retour</a>
+  </div>
+</form>
+{% endblock %}

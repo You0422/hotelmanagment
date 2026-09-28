@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Calendrier · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Calendrier des Réservations</h1>
+    <p class="page-subtitle">Visualisez et gérez vos réservations</p>
+  </div>
+  <button type="button" class="btn btn-primary btn-lg" data-new-event>{% include "icons/plus.html" with cls="icon" %}Nouvel événement calendrier</button>
+</div>
+
+<div class="panel-lg p-6">
+  <div class="cal-nav">
+    <a href="?mois={{ prev_month }}" class="cal-arrow" aria-label="Mois précédent">{% include "icons/arrow-left.html" with cls="icon-lg" %}</a>
+    <h2 class="cal-month">{{ month_label }}</h2>
+    <a href="?mois={{ next_month }}" class="cal-arrow is-next" aria-label="Mois suivant">{% include "icons/arrow-left.html" with cls="icon-lg" %}</a>
+  </div>
+
+  <div class="cal-scroll">
+    <div class="cal-grid">
+      {% for wd in weekdays %}<div class="cal-weekday">{{ wd }}</div>{% endfor %}
+      {% for week in weeks %}{% for day in week %}
+      {% if day.in_month %}
+      <div class="cal-day {% if day.is_today %}is-today{% endif %}" data-date="{{ day.date|date:'Y-m-d' }}" role="button" tabindex="0" aria-label="Nouvel événement le {{ day.date|date:'d/m/Y' }}">
+        <span class="cal-day-num">{{ day.date.day }}</span>
+        <div class="cal-events">
+          {% for it in day.items|slice:":3" %}
+          {% with e=it.obj %}
+          {% if it.kind == 'resa' %}
+          <a href="{% url 'reservation_detail' e.pk %}" class="cal-event is-resa ev-{{ it.css }}"
+             title="Réservation #{{ e.pk }} · {{ e.client.prenom }} {{ e.client.nom }} · Chambre {{ e.chambre.numero_chambre }} · du {{ e.date_arrivee|date:'d/m' }} au {{ e.date_depart|date:'d/m' }} ({{ e.statut_reser }})">
+            <span class="cal-event-name">{% if it.is_arrival %}→ {% endif %}Ch. {{ e.chambre.numero_chambre }}</span>
+            <span class="cal-event-room">{{ e.client.prenom }} {{ e.client.nom|first }}.</span>
+          </a>
+          {% else %}
+          <button type="button" class="cal-event ev-{{ it.css }}" data-modal-open="#eventModal{{ e.pk }}"
+                  title="{{ e.client.prenom }} {{ e.client.nom }} - Chambre {{ e.chambre.numero_chambre }}">
+            <span class="cal-event-name">Ch. {{ e.chambre.numero_chambre }}</span>
+            <span class="cal-event-room">{{ e.client.prenom }}</span>
+          </button>
+          {% endif %}
+          {% endwith %}
+          {% endfor %}
+          {% if day.more %}<span class="cal-more">+{{ day.more }}</span>{% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div class="cal-day is-outside"></div>
+      {% endif %}
+      {% endfor %}{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="panel-lg p-6">
+  <h3 class="font-bold mb-4">Légende des statuts</h3>
+  <div class="cal-legend">
+    {% for value, label in statuts %}
+    <span><i class="cal-swatch ev-{{ value }}"></i>{{ label }}</span>
+    {% endfor %}
+  </div>
+  <p class="text-sm text-muted mt-4">
+    {{ nb_reservations }} réservation{{ nb_reservations|pluralize }} ce mois-ci, affichée{{ nb_reservations|pluralize }} sur chaque nuit du séjour
+    (<strong>→</strong> = jour d'arrivée, bordure épaisse = réservation). Cliquez dessus pour ouvrir la réservation.
+  </p>
+</div>
+
+{# Nouvel événement calendrier #}
+<div class="modal" id="eventCreateModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Nouvel événement calendrier" %}
+    <form method="post" action="{% url 'calendar_event_create' %}" class="form-body">
+      {% csrf_token %}
+      <input type="hidden" name="mois" value="{{ month_param }}">
+      <div class="form-grid">
+        <div class="field col-span-full">
+          <label for="ev_client">Client <span class="req">*</span></label>
+          <div class="combo">
+            <input type="text" class="input combo-search" placeholder="Rechercher un client..." data-combo-for="ev_client" autocomplete="off">
+            <select name="client" id="ev_client" class="select" required>
+              <option value="">Sélectionner un client...</option>
+              {% for c in clients %}
+              <option value="{{ c.pk }}">{{ c.prenom }} {{ c.nom }} — {{ c.code_client }}{% if c.email %} - {{ c.email }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="field col-span-full">
+          <label for="ev_chambre">Chambre <span class="req">*</span></label>
+          <div class="combo">
+            <input type="text" class="input combo-search" placeholder="Rechercher une chambre..." data-combo-for="ev_chambre" autocomplete="off">
+            <select name="chambre" id="ev_chambre" class="select" required>
+              <option value="">Sélectionner une chambre...</option>
+              {% for ch in chambres %}
+              <option value="{{ ch.pk }}">Chambre {{ ch.numero_chambre }} — {{ ch.type_chambre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="field"><label for="ev_date">Date <span class="req">*</span></label><input type="date" name="date" id="ev_date" class="input" required></div>
+        <div class="field"><label for="ev_heure">Heure (optionnel)</label><input type="time" name="heure" id="ev_heure" class="input"></div>
+        <div class="field col-span-full">
+          <label for="ev_statut">Statut</label>
+          <select name="statut" id="ev_statut" class="select">
+            <option value="en_attente">En attente — En cours de confirmation</option>
+            <option value="confirmee" selected>Confirmée — Événement confirmé</option>
+            <option value="en_cours">En cours</option>
+            <option value="terminee">Terminé — Événement terminé</option>
+            <option value="annulee">Annulé — Événement annulé</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Créer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Détail d'un événement : changer le statut, supprimer #}
+{% for e in events %}
+<div class="modal" id="eventModal{{ e.pk }}">
+  <div class="modal-panel is-sm">
+    <div class="mb-4">
+      <h3 class="event-title">{{ e.client.prenom }} {{ e.client.nom }}</h3>
+      <p class="text-sm text-muted mt-1">Chambre {{ e.chambre.numero_chambre }} • {{ e.date|date:"d/m/Y" }}{% if e.heure %} à {{ e.heure|time:"H:i" }}{% endif %}</p>
+    </div>
+    <p class="field-label">Statut</p>
+    <div class="event-status-list">
+      {% for value, label in statuts %}
+      <form method="post" action="{% url 'calendar_event_status' e.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="statut" value="{{ value }}">
+        <button type="submit" class="event-status {% if e.statut == value %}is-current ev-{{ value }}{% endif %}">{{ label }}</button>
+      </form>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <form method="post" action="{% url 'calendar_event_delete' e.pk %}" data-confirm="Êtes-vous sûr de vouloir supprimer cet événement ?" style="flex:1; display:flex;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-soft btn-soft-red btn-block">{% include "icons/trash.html" with cls="icon-sm" %}Supprimer</button>
+      </form>
+      <button type="button" class="btn btn-soft btn-soft-gray" data-modal-close>Fermer</button>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var modal = document.getElementById('eventCreateModal');
+    var dateInput = document.getElementById('ev_date');
+
+    function openCreate(isoDate) {
+      modal.querySelector('form').reset();
+      modal.querySelectorAll('option[hidden]').forEach(function (o) { o.hidden = false; });
+      dateInput.value = isoDate || '';
+      window.HM.openModal(modal);
+    }
+
+    /* Clic sur un jour : nouvel événement à cette date (un clic sur un événement ouvre son détail) */
+    document.querySelectorAll('.cal-day[data-date]').forEach(function (cell) {
+      cell.addEventListener('click', function (e) { if (!e.target.closest('.cal-event')) openCreate(cell.getAttribute('data-date')); });
+      cell.addEventListener('keydown', function (e) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === cell) { e.preventDefault(); openCreate(cell.getAttribute('data-date')); }
+      });
+    });
+    document.querySelector('[data-new-event]').addEventListener('click', function () { openCreate(''); });
+
+    /* Recherche dans les listes Client / Chambre */
+    document.querySelectorAll('.combo-search').forEach(function (input) {
+      var select = document.getElementById(input.getAttribute('data-combo-for'));
+      input.addEventListener('input', function () {
+        var q = input.value.trim().toLowerCase(), first = null;
+        Array.prototype.forEach.call(select.options, function (opt, i) {
+          if (i === 0) return;
+          var match = !q || opt.text.toLowerCase().indexOf(q) !== -1;
+          opt.hidden = !match;
+          if (match && !first) first = opt;
+        });
+        if (q && first) select.value = first.value;
+      });
+    });
+  })();
+</script>
+{% endblock %}

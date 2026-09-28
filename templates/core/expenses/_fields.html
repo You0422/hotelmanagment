@@ -1,0 +1,22 @@
+{# Champs de la dépense. Paramètres : e (dépense existante, facultatif), categories, prefix (identifiant unique) #}
+<div class="form-grid">
+  <div class="field"><label>Catégorie <span class="req">*</span></label>
+    <select name="categorie" class="select js-cat-select" data-current="{{ e.categorie|default:'' }}" required>
+      {% if not e %}<option value="">Sélectionner...</option>{% endif %}
+      {% for val, label in categories %}{% if val != 'Toute' %}
+      <option value="{{ val }}" {% if e.categorie == val %}selected{% endif %}>{{ label }}</option>
+      {% endif %}{% endfor %}
+    </select>
+  </div>
+  <div class="field js-autre-field" hidden><label>Précisez la catégorie <span class="req">*</span></label><input type="text" name="autre_categorie" class="input js-autre-input" placeholder="Ex: Achat fournitures"></div>
+  <div class="field"><label>Date <span class="req">*</span></label><input type="date" name="date_depense" class="input" value="{{ e.date_depense|date:'Y-m-d' }}" required></div>
+  <div class="field"><label>Montant (FCFA) <span class="req">*</span></label><input type="number" name="montant" class="input" placeholder="0" min="0" step="0.01" value="{{ e.montant|floatformat:'-2u'|default:'' }}" required></div>
+  <div class="field col-span-full"><label>Description</label><textarea name="description" rows="3" class="textarea" placeholder="Description de la dépense">{{ e.description|default:'' }}</textarea></div>
+  <div class="field col-span-full"><label>Reçu (justificatif)</label>
+    {% if e.justificatif %}
+    <div class="note note-green mb-2 flex items-center gap-2">{% include "icons/paperclip.html" with cls="icon-sm" %}<span>Reçu actuel : <a class="text-blue" href="{{ e.justificatif.url }}" target="_blank" rel="noopener">{{ e.justificatif.name|truncatechars:34 }}</a></span></div>
+    {% endif %}
+    <input type="file" name="justificatif" class="input" accept="image/*,.pdf">
+    <p class="field-help">Image (JPG, PNG) ou PDF.{% if e.justificatif %} Laissez vide pour garder le reçu actuel.{% endif %}</p>
+  </div>
+</div>

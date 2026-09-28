@@ -1,0 +1,15 @@
+{# Paramètres : modal_id, action, title, message (facultatif) #}
+<div class="modal" id="{{ modal_id }}" role="dialog" aria-modal="true">
+  <div class="modal-panel">
+    <div class="confirm-icon">{% include "icons/trash.html" with cls="icon-lg" %}</div>
+    <div class="confirm-text">
+      <h3>{{ title }}</h3>
+      <p>{{ message|default:"Cette action est irréversible." }}</p>
+    </div>
+    <form method="post" action="{{ action }}" class="form-actions">
+      {% csrf_token %}
+      <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+      <button type="submit" class="btn btn-danger">Supprimer</button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+{# Paramètres : title, message, cancel_url #}
+<div class="page-narrow is-sm">
+  <div class="panel p-6">
+    <div class="confirm-icon">{% include "icons/trash.html" with cls="icon-lg" %}</div>
+    <div class="confirm-text">
+      <h3>{{ title }}</h3>
+      <p>{{ message|default:"Cette action est irréversible." }}</p>
+    </div>
+    <form method="post" class="form-actions">
+      {% csrf_token %}
+      <a href="{{ cancel_url }}" class="btn btn-outline">Annuler</a>
+      <button type="submit" class="btn btn-danger">Supprimer</button>
+    </form>
+  </div>
+</div>

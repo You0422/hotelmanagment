@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{% if service %}Modifier le service{% else %}Ajouter un service{% endif %} · HotelManagment{% endblock %}
+{% block content %}
+<div class="page-narrow">
+  <div class="panel p-6">
+    {% url 'services_list' as back_url %}
+    {% if service %}{% include "core/partials/page_form_head.html" with title="Modifier le service" back_url=back_url %}{% else %}{% include "core/partials/page_form_head.html" with title="Ajouter un service" back_url=back_url %}{% endif %}
+    <form method="post" class="form-body">
+      {% csrf_token %}
+      {% include "core/partials/form_errors.html" %}
+      {% if form.is_bound %}{% include "core/services/_fields.html" with s=form.data %}{% else %}{% include "core/services/_fields.html" with s=form.instance %}{% endif %}
+      <div class="form-actions">
+        <a href="{% url 'services_list' %}" class="btn btn-outline">Annuler</a>
+        <button type="submit" class="btn btn-primary">{% if service %}Enregistrer{% else %}Ajouter{% endif %}</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

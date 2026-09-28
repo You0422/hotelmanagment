@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Rapports · HotelManagment{% endblock %}
+{% block content %}
+
+<div>
+  <h1 class="page-title">Rapports &amp; Analyses</h1>
+  <p class="page-subtitle">Générez et analysez vos rapports financiers (FCFA)</p>
+</div>
+
+<div class="panel-lg p-6">
+  <form method="get" class="report-filter">
+    <div class="field"><label for="date_debut">Date de début</label><input type="date" id="date_debut" name="date_debut" value="{{ date_debut }}" class="input" required></div>
+    <div class="field"><label for="date_fin">Date de fin</label><input type="date" id="date_fin" name="date_fin" value="{{ date_fin }}" class="input" required></div>
+    <button type="submit" class="btn btn-primary">{% include "icons/bar-chart.html" with cls="icon" %}Générer</button>
+    {% if generated %}
+    <div class="flex gap-2">
+      <a href="{% url 'report_export_pdf' %}?date_debut={{ date_debut }}&date_fin={{ date_fin }}" class="btn btn-danger" style="flex:1;" target="_blank" rel="noopener">{% include "icons/file-down.html" with cls="icon" %}PDF</a>
+      <a href="{% url 'report_export_excel' %}?date_debut={{ date_debut }}&date_fin={{ date_fin }}" class="btn btn-success" style="flex:1;">{% include "icons/file-spreadsheet.html" with cls="icon" %}Excel</a>
+    </div>
+    {% endif %}
+  </form>
+</div>
+
+{% if not generated %}
+<div class="panel-lg empty">
+  {% include "icons/file-text.html" with cls="icon-empty" %}
+  <h3>Aucun rapport généré</h3>
+  <p>Sélectionnez une période et cliquez sur « Générer » pour afficher les données</p>
+</div>
+{% else %}
+
+<div class="grid-3">
+  <div class="gradient-card gradient-blue">
+    <div><p class="g-label">Chiffre d'affaires total</p><p class="g-value">{{ total_recettes|floatformat:0|intcomma }} FCFA</p><p class="g-hint">{{ nb_paiements }} paiement{{ nb_paiements|pluralize }} encaissé{{ nb_paiements|pluralize }}</p></div>
+  </div>
+  <div class="gradient-card gradient-green">
+    <div><p class="g-label">Bénéfice net</p><p class="g-value">{{ benefice_net|floatformat:0|intcomma }} FCFA</p><p class="g-hint">Après dépenses ({{ total_depenses|floatformat:0|intcomma }} FCFA)</p></div>
+  </div>
+  <div class="gradient-card gradient-orange">
+    <div><p class="g-label">Taux d'occupation</p><p class="g-value">{{ taux_occupation }} %</p><p class="g-hint">{{ room_nights }} nuitée{{ room_nights|pluralize }} vendue{{ room_nights|pluralize }} sur {{ capacity }}</p></div>
+  </div>
+</div>
+
+<div class="grid-4">
+  <div class="stat-card-border accent-blue"><div><p class="stat-label">Réservations</p><p class="stat-value">{{ nb_reservations }}</p></div><div class="stat-icon-soft">{% include "icons/calendar.html" with cls="icon-lg" %}</div></div>
+  <div class="stat-card-border accent-purple"><div><p class="stat-label">Clients uniques</p><p class="stat-value">{{ nb_clients }}</p></div><div class="stat-icon-soft">{% include "icons/users.html" with cls="icon-lg" %}</div></div>
+  <div class="stat-card-border accent-green"><div><p class="stat-label">Paiement moyen</p><p class="stat-value">{{ montant_moyen_paiement|floatformat:0|intcomma }} FCFA</p></div><div class="stat-icon-soft">{% include "icons/wallet.html" with cls="icon-lg" %}</div></div>
+  <div class="stat-card-border accent-red"><div><p class="stat-label">Encours impayés</p><p class="stat-value">{{ encours_impayes|floatformat:0|intcomma }} FCFA</p></div><div class="stat-icon-soft">{% include "icons/alert-circle.html" with cls="icon-lg" %}</div></div>
+  <div class="stat-card-border accent-indigo"><div><p class="stat-label">Revenu moyen / réservation</p><p class="stat-value">{{ revenu_moyen_par_reservation|floatformat:0|intcomma }} FCFA</p></div><div class="stat-icon-soft">{% include "icons/receipt.html" with cls="icon-lg" %}</div></div>
+  <div class="stat-card-border accent-amber"><div><p class="stat-label">Revenu moyen / client</p><p class="stat-value">{{ revenu_moyen_par_client|floatformat:0|intcomma }} FCFA</p></div><div class="stat-icon-soft">{% include "icons/user.html" with cls="icon-lg" %}</div></div>
+  <div class="stat-card-border accent-green"><div><p class="stat-label">Marge bénéficiaire</p><p class="stat-value">{{ marge_beneficiaire|floatformat:2 }} %</p></div><div class="stat-icon-soft">{% include "icons/trending-up.html" with cls="icon-lg" %}</div></div>
+  <div class="stat-card-border accent-blue"><div><p class="stat-label">RevPAR</p><p class="stat-value">{{ revpar|floatformat:0|intcomma }} FCFA</p></div><div class="stat-icon-soft">{% include "icons/bed.html" with cls="icon-lg" %}</div></div>
+</div>
+
+<div class="grid-lg-2">
+  <div class="panel-lg p-6">
+    <h2 class="panel-title mb-4">Répartition des Dépenses</h2>
+    {% if depenses_par_categorie %}
+    <div class="legend-list">
+      {% for d in depenses_par_categorie %}
+      <div class="legend-item"><span class="legend-item-left"><span class="legend-swatch js-swatch"></span>{{ d.categorie }}</span><strong>{{ d.total|floatformat:0|intcomma }} FCFA</strong></div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="text-sm text-muted">Aucune dépense sur la période.</p>{% endif %}
+  </div>
+  <div class="panel-lg p-6">
+    <h2 class="panel-title mb-4">Réservations par statut</h2>
+    {% if reservations_par_statut %}
+    <div class="legend-list">
+      {% for r in reservations_par_statut %}
+      <div class="legend-item"><span class="legend-item-left">{% include "core/partials/reservation_badge.html" with statut=r.statut_reser %}</span><strong>{{ r.nb }}</strong></div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="text-sm text-muted">Aucune réservation sur la période.</p>{% endif %}
+  </div>
+</div>
+
+<div class="grid-lg-2">
+  <div class="panel-lg overflow-hidden">
+    <div class="panel-head-border"><h2 class="panel-title">Paiements par méthode</h2></div>
+    {% if paiements_par_methode %}
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Méthode</th><th class="t-center">Transactions</th><th class="t-right">Montant</th></tr></thead>
+      <tbody>{% for p in paiements_par_methode %}<tr><td class="t-strong">{{ p.methode_paiement }}</td><td class="t-center">{{ p.nb }}</td><td class="t-right t-strong nowrap">{{ p.total|floatformat:0|intcomma }} FCFA</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><p>Aucun paiement sur la période</p></div>{% endif %}
+  </div>
+  <div class="panel-lg overflow-hidden">
+    <div class="panel-head-border"><h2 class="panel-title">Distribution des Clients</h2><p class="text-sm text-muted mt-1">Top 5 par montant payé</p></div>
+    {% if top_clients %}
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Client</th><th class="t-center">Paiements</th><th class="t-right">Montant</th></tr></thead>
+      <tbody>{% for c in top_clients %}<tr><td class="t-strong">{{ c.reservation__client__prenom }} {{ c.reservation__client__nom }}</td><td class="t-center">{{ c.nb_paiements }}</td><td class="t-right t-strong nowrap">{{ c.total|floatformat:0|intcomma }} FCFA</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><p>Aucun client sur la période</p></div>{% endif %}
+  </div>
+</div>
+
+<div class="grid-lg-2">
+  <div class="panel-lg overflow-hidden">
+    <div class="panel-head-border"><h2 class="panel-title">Chambres les plus réservées</h2></div>
+    {% if top_chambres %}
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Chambre</th><th>Type</th><th class="t-center">Réservations</th></tr></thead>
+      <tbody>{% for c in top_chambres %}<tr><td class="t-strong">{{ c.chambre__numero_chambre }}</td><td>{{ c.chambre__type_chambre }}</td><td class="t-center">{{ c.nb_reservations }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><p>Aucune donnée</p></div>{% endif %}
+  </div>
+  <div class="panel-lg overflow-hidden">
+    <div class="panel-head-border"><h2 class="panel-title">Services les plus vendus</h2></div>
+    {% if top_services %}
+    <div class="table-wrap"><table class="data-table">
+      <thead><tr><th>Service</th><th class="t-center">Quantité</th><th class="t-right">Montant</th></tr></thead>
+      <tbody>{% for s in top_services %}<tr><td class="t-strong">{{ s.nom_service }}</td><td class="t-center">{{ s.quantite }}</td><td class="t-right t-strong nowrap">{{ s.total|floatformat:0|intcomma }} FCFA</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><p>Aucun service vendu sur la période</p></div>{% endif %}
+  </div>
+</div>
+
+{% if daily_finance %}
+<div class="panel-lg overflow-hidden">
+  <div class="panel-head-border"><h2 class="panel-title">Journal financier</h2><p class="text-sm text-muted mt-1">Recettes, dépenses et résultat par jour</p></div>
+  <div class="table-wrap"><table class="data-table">
+    <thead><tr><th>Date</th><th class="t-right">Recettes</th><th class="t-right">Dépenses</th><th class="t-right">Résultat</th></tr></thead>
+    <tbody>
+      {% for j in daily_finance %}
+      <tr>
+        <td class="nowrap">{{ j.date|date:"d/m/Y" }}</td>
+        <td class="t-right nowrap">{{ j.recettes|floatformat:0|intcomma }} FCFA</td>
+        <td class="t-right nowrap">{{ j.depenses|floatformat:0|intcomma }} FCFA</td>
+        <td class="t-right nowrap {% if j.resultat < 0 %}t-red{% else %}t-green{% endif %}">{{ j.resultat|floatformat:0|intcomma }} FCFA</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endif %}
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var palette = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
+    document.querySelectorAll('.js-swatch').forEach(function (el, i) { el.style.background = palette[i % palette.length]; });
+  })();
+</script>
+{% endblock %}

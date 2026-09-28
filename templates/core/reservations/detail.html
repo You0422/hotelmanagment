@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Réservation #{{ r.id }} · HotelManagment{% endblock %}
+{% block content %}
+<a href="{% url 'reservations_list' %}" class="back-link">{% include "icons/arrow-left.html" with cls="icon-sm" %}Retour aux réservations</a>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Réservation #{{ r.id }}</h1>
+    <p class="page-subtitle">{{ r.client.prenom }} {{ r.client.nom }} — Chambre {{ r.chambre.numero_chambre }}</p>
+  </div>
+  {% include "core/partials/reservation_badge.html" with statut=r.statut_reser %}
+</div>
+
+<div class="panel p-6">
+  <div class="kv" style="grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));">
+    <div class="kv-item"><p class="kv-label">Client</p><p class="kv-value">{{ r.client.prenom }} {{ r.client.nom }}</p><p class="t-muted text-xs">{{ r.client.code_client }}</p></div>
+    <div class="kv-item"><p class="kv-label">Chambre</p><p class="kv-value">{{ r.chambre.numero_chambre }} ({{ r.chambre.type_chambre }})</p></div>
+    <div class="note note-green"><p class="note-label">Date d'entrée</p><p class="note-value">{{ r.date_arrivee|date:"d/m/Y" }}</p></div>
+    <div class="note note-red"><p class="note-label">Date de sortie</p><p class="note-value">{{ r.date_depart|date:"d/m/Y" }} · {{ r.nb_nuits }} nuit{{ r.nb_nuits|pluralize }}</p></div>
+  </div>
+</div>
+
+<div class="grid-lg-2">
+  <div class="panel overflow-hidden">
+    <div class="panel-head panel-head-border">
+      <h2 class="panel-title">Services</h2>
+      <button type="button" class="btn btn-primary" data-modal-open="#addServiceModal">{% include "icons/plus.html" with cls="icon-sm" %}Ajouter</button>
+    </div>
+    {% if services %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Service</th><th class="t-right">Prix</th><th></th></tr></thead>
+        <tbody>
+          {% for s in services %}
+          <tr>
+            <td class="t-strong">{{ s.nom_service }}{% if s.description %}<div class="t-muted">{{ s.description }}</div>{% endif %}</td>
+            <td class="t-right nowrap">{{ s.prix_service|floatformat:0|intcomma }} FCFA</td>
+            <td class="t-right"><button type="button" class="icon-btn icon-btn-red" title="Supprimer ce service" data-modal-open="#delResaSvc{{ s.pk }}">{% include "icons/trash.html" with cls="icon-sm" %}</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">{% include "icons/briefcase.html" with cls="icon-empty" %}<p>Aucun service ajouté</p></div>
+    {% endif %}
+  </div>
+
+  <div class="panel overflow-hidden">
+    <div class="panel-head panel-head-border">
+      <h2 class="panel-title">Paiements</h2>
+      <button type="button" class="btn btn-primary" data-modal-open="#addPaymentModal">{% include "icons/plus.html" with cls="icon-sm" %}Ajouter</button>
+    </div>
+    {% if paiements %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Méthode</th><th class="t-right">Montant</th><th></th></tr></thead>
+        <tbody>
+          {% for p in paiements %}
+          <tr>
+            <td class="nowrap">{{ p.date_paiement|date:"d/m/Y H:i" }}</td>
+            <td><span class="badge {% if p.methode_paiement == 'Espèces' %}badge-green{% elif p.methode_paiement == 'Mobile Money' %}badge-orange{% else %}badge-blue{% endif %}">{{ p.methode_paiement }}</span>{% if p.reference_paiement %}<div class="t-muted">{{ p.reference_paiement }}</div>{% endif %}</td>
+            <td class="t-right t-green nowrap">{{ p.montant_paye|floatformat:0|intcomma }} FCFA</td>
+            <td class="t-right"><a href="{% url 'payment_receipt' p.pk %}" class="icon-btn icon-btn-green" title="Reçu de paiement" target="_blank" rel="noopener">{% include "icons/receipt.html" with cls="icon-sm" %}</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">{% include "icons/credit-card.html" with cls="icon-empty" %}<p>Aucun paiement enregistré</p></div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="panel p-6">
+  <div class="grid-lg-2">
+    <div>
+      <h2 class="form-section-title">Résumé financier</h2>
+      <div class="summary-row"><span>Nuitées ({{ r.nb_nuits }} × {{ r.prix_nuit|floatformat:0|intcomma }} FCFA)</span><span>{{ r.total_chambre|floatformat:0|intcomma }} FCFA</span></div>
+      <div class="summary-row"><span>Services</span><span>{{ r.total_services|floatformat:0|intcomma }} FCFA</span></div>
+      <div class="summary-row is-total"><span>Total</span><span>{{ r.total_chambre|add:r.total_services|intcomma }} FCFA</span></div>
+      <div class="summary-row"><span>Montant payé</span><span class="is-green">{{ r.total_paye|floatformat:0|intcomma }} FCFA</span></div>
+      <div class="summary-row"><span>Montant restant</span><span class="{% if r.solde_du > 0 %}is-red{% else %}is-green{% endif %}">{{ r.solde_du|floatformat:0|intcomma }} FCFA</span></div>
+      <div class="progress mt-2"><span style="width: {% if r.pourcentage_paye > 100 %}100{% else %}{{ r.pourcentage_paye|floatformat:'0u' }}{% endif %}%"></span></div>
+      <p class="text-xs text-muted mt-1">{{ r.pourcentage_paye }} % payé</p>
+    </div>
+    <div>
+      <h2 class="form-section-title">Actions</h2>
+      <div class="form-stack">
+        <form method="post" action="{% url 'reservation_checkin' r.id %}">{% csrf_token %}
+          <button type="submit" class="btn btn-success btn-block">{% include "icons/log-in.html" with cls="icon-sm" %}Check-in</button>
+        </form>
+        <form method="post" action="{% url 'reservation_checkout' r.id %}" data-confirm="Êtes-vous sûr de vouloir faire le check-out ?">{% csrf_token %}
+          <button type="submit" class="btn btn-warning btn-block">{% include "icons/log-out.html" with cls="icon-sm" %}Check-out</button>
+        </form>
+        <a href="{% url 'reservation_invoice' r.id %}" class="btn btn-indigo btn-block" target="_blank" rel="noopener">{% include "icons/printer.html" with cls="icon-sm" %}Imprimer la facture</a>
+        <form method="post" action="{% url 'reservation_cancel' r.id %}" data-confirm="Annuler cette réservation ? Elle sera supprimée définitivement.">{% csrf_token %}
+          <button type="submit" class="btn btn-outline btn-block text-red">{% include "icons/x-circle.html" with cls="icon-sm" %}Annuler la réservation</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% for s in services %}
+{% url 'reservation_delete_service' r.id s.pk as del_svc_url %}
+{% with pk_s=s.pk|stringformat:"s" %}
+{% include "core/partials/confirm_delete_modal.html" with modal_id="delResaSvc"|add:pk_s action=del_svc_url title="Supprimer « "|add:s.nom_service|add:" » ?" message="Le service sera retiré de cette réservation et du total à payer." %}
+{% endwith %}
+{% endfor %}
+
+<div class="modal" id="addServiceModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Ajouter un service" %}
+    <form method="post" action="{% url 'reservation_add_service' r.id %}" class="form-body">
+      {% csrf_token %}
+      {% include "core/services/_fields.html" with s=None %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="addPaymentModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Enregistrer un paiement" %}
+    <form method="post" action="{% url 'reservation_add_payment' r.id %}" class="form-body">
+      {% csrf_token %}
+      <div class="note note-blue is-text">Reste à payer : <strong>{{ r.solde_du|floatformat:0 }} FCFA</strong></div>
+      {% include "core/payments/_fields.html" with reservations=None %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

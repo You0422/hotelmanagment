@@ -1,0 +1,10 @@
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div class="fw-semibold">Chambre {{ r.numero_chambre }}</div>
+      <span class="badge {% if r.statut_actuel == 'Libre' %}bg-success{% elif r.statut_actuel == 'Occupée' %}bg-danger{% elif r.statut_actuel == 'En maintenance' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ r.statut_actuel }}</span>
+    </div>
+    <div class="text-muted small">Type: {{ r.type_chambre }}</div>
+    {% if r.description %}<div class="text-muted small">{{ r.description }}</div>{% endif %}
+  </div>
+</div>

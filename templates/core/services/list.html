@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Services · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Services supplémentaires</h1>
+    <p class="page-subtitle">Gérez les services proposés aux clients</p>
+  </div>
+  {% if is_admin %}
+  <button type="button" class="btn btn-primary btn-lg" data-modal-open="#serviceModal">{% include "icons/plus.html" with cls="icon" %}Ajouter un service</button>
+  {% endif %}
+</div>
+
+<div class="panel-lg p-4">
+  <form method="get" class="search-row">
+    <div class="search-box">
+      {% include "icons/search.html" with cls="icon" %}
+      <input type="text" name="q" value="{{ q }}" placeholder="Rechercher un service..." class="input">
+    </div>
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+    {% if q %}<a href="{% url 'services_list' %}" class="btn btn-outline">Effacer</a>{% endif %}
+  </form>
+</div>
+
+{% if services %}
+<div class="grid-3 gap-6">
+  {% for s in services %}
+  <div class="item-card">
+    <div class="item-card-head">
+      <div class="item-card-id">
+        <div class="item-card-icon is-indigo">{% include "icons/package.html" with cls="icon-lg" %}</div>
+        <div class="truncate">
+          <h3 class="item-card-title" style="font-size:1.125rem;">{{ s.nom_service }}</h3>
+          <p class="item-card-price">{{ s.prix_service|floatformat:0|intcomma }} FCFA</p>
+        </div>
+      </div>
+    </div>
+    {% if s.description %}<p class="item-desc">{{ s.description }}</p>{% endif %}
+    {% if s.reservation %}
+    <p class="text-xs text-muted mb-4">Réservation #{{ s.reservation.id }} · {{ s.reservation.client.prenom }} {{ s.reservation.client.nom }}</p>
+    {% endif %}
+    <div class="item-actions">
+      <button type="button" class="btn-soft btn-soft-purple" data-modal-open="#detailSvc{{ s.pk }}">{% include "icons/eye.html" with cls="icon-sm" %}<span>Détails</span></button>
+      {% if is_admin %}
+      <button type="button" class="btn-soft btn-soft-blue" data-modal-open="#editSvc{{ s.pk }}">{% include "icons/edit.html" with cls="icon-sm" %}<span>Modifier</span></button>
+      <button type="button" class="btn-soft btn-soft-red" data-modal-open="#delSvc{{ s.pk }}">{% include "icons/trash.html" with cls="icon-sm" %}<span>Supprimer</span></button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="modal" id="detailSvc{{ s.pk }}">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <h2 class="modal-title">{{ s.nom_service }}</h2>
+        <button type="button" class="modal-close" data-modal-close aria-label="Fermer">{% include "icons/x.html" with cls="icon-lg" %}</button>
+      </div>
+      <div class="modal-body">
+        <div class="kv">
+          <div class="kv-item"><p class="kv-label">Nom</p><p class="kv-value">{{ s.nom_service }}</p></div>
+          <div class="kv-item"><p class="kv-label">Prix</p><p class="kv-value" style="color:var(--indigo-600);">{{ s.prix_service|floatformat:0|intcomma }} FCFA</p></div>
+        </div>
+        {% if s.reservation %}<div class="note note-blue"><p class="note-label">Réservation</p><p class="note-value">#{{ s.reservation.id }} · {{ s.reservation.client.prenom }} {{ s.reservation.client.nom }}</p></div>{% endif %}
+        {% if s.description %}<div class="note note-gray"><p class="note-label">Description</p><p class="note-value">{{ s.description }}</p></div>{% endif %}
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" data-modal-close>Fermer</button>
+          {% if is_admin %}<button type="button" class="btn btn-primary" data-modal-open="#editSvc{{ s.pk }}" data-modal-swap>Modifier</button>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if is_admin %}
+  <div class="modal" id="editSvc{{ s.pk }}">
+    <div class="modal-panel is-lg">
+      {% include "core/partials/modal_head.html" with title="Modifier le service" %}
+      <form method="post" action="{% url 'service_update' s.pk %}" class="form-body">
+        {% csrf_token %}
+        {% include "core/services/_fields.html" %}
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% url 'service_delete' s.pk as delete_url %}
+  {% with pk_s=s.pk|stringformat:"s" %}
+  {% include "core/partials/confirm_delete_modal.html" with modal_id="delSvc"|add:pk_s action=delete_url title="Supprimer « "|add:s.nom_service|add:" » ?" %}
+  {% endwith %}
+  {% endif %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel empty">
+  {% include "icons/briefcase.html" with cls="icon-empty" %}
+  <h3>Aucun service</h3>
+  <p>{% if q %}Aucun service ne correspond à votre recherche{% else %}Ajoutez des services à proposer à vos clients{% endif %}</p>
+</div>
+{% endif %}
+
+{% if is_admin %}
+<div class="modal" id="serviceModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Ajouter un service" %}
+    <form method="post" action="{% url 'service_create' %}" class="form-body">
+      {% csrf_token %}
+      {% include "core/services/_fields.html" with s=None %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

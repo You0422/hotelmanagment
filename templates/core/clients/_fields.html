@@ -1,0 +1,50 @@
+{% comment %}Champs du client, disposition de la démo. Paramètres : c (client ou données du formulaire, facultatif), code (numéro client affiché){% endcomment %}
+<div class="client-demo-form">
+  <div class="note note-blue is-text"><strong>Numéro client:</strong> {{ code|default:"attribué automatiquement" }}</div>
+
+  <div class="form-grid">
+    <input type="text" name="prenom" class="input" placeholder="Prénom" aria-label="Prénom" value="{{ c.prenom|default:'' }}" required>
+    <input type="text" name="nom" class="input" placeholder="Nom" aria-label="Nom" value="{{ c.nom|default:'' }}" required>
+  </div>
+  <div class="form-grid">
+    <input type="email" name="email" class="input" placeholder="Email" aria-label="Email" value="{{ c.email|default:'' }}">
+    <input type="tel" name="telephone" class="input" placeholder="Téléphone" aria-label="Téléphone" value="{{ c.telephone|default:'' }}">
+  </div>
+  <input type="text" name="adresse" class="input" placeholder="Adresse" aria-label="Adresse" value="{{ c.adresse|default:'' }}">
+
+  <div class="form-box is-blue">
+    <h3 class="form-box-title">{% include "icons/file-text.html" with cls="icon-sm" %}Documents d'identification</h3>
+    <div class="form-grid">
+      <div class="field">
+        <label>Type de document</label>
+        <div class="hm-combo" data-combo data-combo-required>
+          <input type="hidden" name="type_document" value="{{ c.type_document|default:'' }}" data-combo-value>
+          <div class="hm-combo-control">
+            {% include "icons/search.html" with cls="icon-sm hm-combo-search" %}
+            <input type="text" class="input hm-combo-input" placeholder="Carte d'identité (CNI)" autocomplete="off" data-combo-input aria-label="Type de document">
+            <span class="hm-combo-chevron" aria-hidden="true">{% include "icons/chevron-down.html" with cls="icon-sm" %}</span>
+          </div>
+          <div class="hm-combo-menu" data-combo-menu hidden>
+            <ul>
+              <li data-value="CNI" data-label="Carte d'identité (CNI)"><strong>Carte d'identité (CNI)</strong><span>Nationale</span></li>
+              <li data-value="Passeport" data-label="Passeport"><strong>Passeport</strong><span>International</span></li>
+            </ul>
+            <p class="hm-combo-empty" data-combo-empty hidden>Aucun résultat trouvé</p>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Numéro du document</label>
+        <input type="text" name="numero_document" class="input" placeholder="Numéro de CNI ou Passeport" value="{{ c.numero_document|default:'' }}" required>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-box is-green">
+    <h3 class="form-box-title">{% include "icons/calendar.html" with cls="icon-sm" %}Période de séjour</h3>
+    <div class="form-grid">
+      <div class="field"><label>Date d'entrée</label><input type="date" name="date_entree" class="input" value="{% if c.date_entree.year %}{{ c.date_entree|date:'Y-m-d' }}{% else %}{{ c.date_entree|default:'' }}{% endif %}" required></div>
+      <div class="field"><label>Date de sortie</label><input type="date" name="date_sortie" class="input" value="{% if c.date_sortie.year %}{{ c.date_sortie|date:'Y-m-d' }}{% else %}{{ c.date_sortie|default:'' }}{% endif %}" required></div>
+    </div>
+  </div>
+</div>

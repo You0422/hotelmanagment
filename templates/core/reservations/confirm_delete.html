@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Supprimer une réservation · HotelManagment{% endblock %}
+{% block content %}
+{% url 'reservations_list' as cancel_url %}
+{% with id_s=reservation.id|stringformat:"s" %}
+{% include "core/partials/confirm_delete_page.html" with title="Supprimer la réservation #"|add:id_s|add:" ?" message="Cette action supprimera la réservation ainsi que ses services et paiements." cancel_url=cancel_url %}
+{% endwith %}
+{% endblock %}

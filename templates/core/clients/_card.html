@@ -1,0 +1,30 @@
+<div class="client-card {% if c.nb_reservations >= 2 %}is-regular{% endif %}">
+  <div class="client-card-head">
+    <div class="truncate">
+      <div class="flex items-center gap-2"><h3 class="client-card-name truncate">{{ c.prenom }} {{ c.nom }}</h3>{% if c.nb_reservations >= 2 %}<span class="regular-star" title="Client régulier">{% include "icons/star.html" with cls="icon" %}</span>{% endif %}</div>
+      <p class="client-card-email">{{ c.email|default:"Email non renseigné" }}</p>
+    </div>
+    <span class="client-card-code">{{ c.code_client }}</span>
+  </div>
+
+  <div class="client-card-body">
+    {% if c.nb_reservations >= 2 %}<div class="regular-box">{% include "icons/star.html" with cls="icon-sm" %}Client régulier - {{ c.nb_reservations }} réservation{{ c.nb_reservations|pluralize }}</div>{% endif %}
+    <div class="info-line">{% include "icons/hash.html" with cls="icon-sm" %}<div><p class="info-line-label">Numéro client</p><p class="info-line-value">{{ c.code_client }}</p></div></div>
+    <div class="info-line">{% include "icons/phone.html" with cls="icon-sm" %}<div><p class="info-line-label">Téléphone</p><p class="info-line-value">{{ c.telephone|default:"—" }}</p></div></div>
+    <div class="info-line">{% include "icons/map-pin.html" with cls="icon-sm" %}<div><p class="info-line-label">Adresse</p><p class="info-line-value">{{ c.adresse|default:"—" }}</p></div></div>
+    <div class="info-line">{% include "icons/file-text.html" with cls="icon-sm" %}<div><p class="info-line-label">{{ c.type_document }}</p><p class="info-line-value">{{ c.numero_document }}</p></div></div>
+    <div class="info-line">{% include "icons/calendar.html" with cls="icon-sm" %}<div><p class="info-line-label">Séjour</p><p class="info-line-value">{{ c.date_entree|date:"d/m/Y" }} au {{ c.date_sortie|date:"d/m/Y" }}</p></div></div>
+    <div class="info-line">{% include "icons/calendar.html" with cls="icon-sm" %}<div><p class="info-line-label">Client depuis</p><p class="info-line-value">{{ c.date_creation|date:"d/m/Y" }}</p></div></div>
+    {% with statut=c.statut_sejour %}
+    <div class="mt-2"><span class="badge {% if statut == 'Actif' %}badge-green{% elif statut == 'À venir' %}badge-yellow{% else %}badge-gray{% endif %}">{% if statut == 'Actif' %}✓ {% endif %}{{ statut }}</span></div>
+    {% endwith %}
+  </div>
+
+  <div class="client-card-foot">
+    <button type="button" class="btn-soft btn-soft-blue" data-modal-open="#detailClientModal{{ c.pk }}">Détails</button>
+    {% if is_admin %}
+    <button type="button" class="btn-soft btn-soft-gray" data-modal-open="#editClientModal{{ c.pk }}">Modifier</button>
+    <button type="button" class="btn-soft btn-soft-red" data-modal-open="#deleteClientModal{{ c.pk }}">Supprimer</button>
+    {% endif %}
+  </div>
+</div>

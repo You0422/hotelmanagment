@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Rapport financier {{ date_debut }} - {{ date_fin }}</title>
+  <style>
+    @page { size: A4; margin: 12mm 14mm; }
+    body { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; line-height: 1.1; color: #1e293b; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .muted { color: #64748b; }
+    .title { font-size: 15pt; font-weight: bold; }
+    .sub { font-size: 9pt; color: #3b82f6; }
+    table { width: 100%; border-collapse: collapse; }
+    .line-blue td { border-bottom: 0.8pt solid #3b82f6; font-size: 2pt; line-height: 2pt; }
+    .line-grey td { border-bottom: 0.5pt solid #c8c8c8; font-size: 2pt; line-height: 2pt; }
+    .section { font-size: 10pt; font-weight: bold; padding: 12px 0 5px 0; }
+    .kpi td { width: 33%; padding: 7px 8px 5px 8px; color: #ffffff; }
+    .kpi .k-label { font-size: 8pt; }
+    .kpi .k-value { font-size: 13pt; font-weight: bold; }
+    .bg-blue { background-color: #3b82f6; } .bg-green { background-color: #16a34a; } .bg-orange { background-color: #f97316; }
+    .stats td { width: 25%; padding: 6px 8px 4px 8px; border: 0.5pt solid #e5e7eb; }
+    .stats .s-label { font-size: 7.5pt; color: #64748b; }
+    .stats .s-value { font-size: 10pt; font-weight: bold; }
+    .grid th { background-color: #3b82f6; color: #ffffff; font-weight: bold; padding: 4px 6px 3px 6px; text-align: left; }
+    .grid th.right { text-align: right; }
+    .grid td { padding: 4px 6px 3px 6px; }
+    .grid tr.odd td { background-color: #f5f5f5; }
+    .green { color: #16a34a; } .red { color: #e53e22; }
+    .footer { font-size: 7pt; color: #64748b; padding-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="center title">RAPPORT FINANCIER</div>
+  <div class="center sub">Période : {{ date_debut }} au {{ date_fin }}</div>
+  <br>
+  <table class="line-blue"><tr><td>&nbsp;</td></tr></table>
+
+  <div class="section">Indicateurs clés</div>
+  <table class="kpi">
+    <tr>
+      <td class="bg-blue"><div class="k-label">Chiffre d'affaires</div><div class="k-value">{{ total_recettes|floatformat:0 }} F</div></td>
+      <td class="bg-green"><div class="k-label">Bénéfice net</div><div class="k-value">{{ benefice_net|floatformat:0 }} F</div></td>
+      <td class="bg-orange"><div class="k-label">Taux d'occupation</div><div class="k-value">{{ taux_occupation }} %</div></td>
+    </tr>
+  </table>
+  <br>
+  <table class="stats">
+    <tr>
+      <td><div class="s-label">Dépenses</div><div class="s-value red">{{ total_depenses|floatformat:0 }} F</div></td>
+      <td><div class="s-label">Marge bénéficiaire</div><div class="s-value">{{ marge_beneficiaire|floatformat:2 }} %</div></td>
+      <td><div class="s-label">Réservations</div><div class="s-value">{{ nb_reservations }}</div></td>
+      <td><div class="s-label">Clients uniques</div><div class="s-value">{{ nb_clients }}</div></td>
+    </tr>
+    <tr>
+      <td><div class="s-label">Paiements</div><div class="s-value">{{ nb_paiements }}</div></td>
+      <td><div class="s-label">Paiement moyen</div><div class="s-value">{{ montant_moyen_paiement|floatformat:0 }} F</div></td>
+      <td><div class="s-label">Revenu moyen / réservation</div><div class="s-value">{{ revenu_moyen_par_reservation|floatformat:0 }} F</div></td>
+      <td><div class="s-label">Encours impayés</div><div class="s-value red">{{ encours_impayes|floatformat:0 }} F</div></td>
+    </tr>
+    <tr>
+      <td><div class="s-label">Nuitées vendues</div><div class="s-value">{{ room_nights }}</div></td>
+      <td><div class="s-label">Capacité (nuitées)</div><div class="s-value">{{ capacity }}</div></td>
+      <td><div class="s-label">RevPAR</div><div class="s-value">{{ revpar|floatformat:0 }} F</div></td>
+      <td><div class="s-label">Revenu moyen / client</div><div class="s-value">{{ revenu_moyen_par_client|floatformat:0 }} F</div></td>
+    </tr>
+  </table>
+
+  {% if depenses_par_categorie %}
+  <div class="section">Répartition des dépenses</div>
+  <table class="grid">
+    <tr><th style="width:70%;">Catégorie</th><th class="right">Montant (FCFA)</th></tr>
+    {% for d in depenses_par_categorie %}<tr class="{% cycle 'odd' '' %}"><td>{{ d.categorie }}</td><td class="right">{{ d.total|floatformat:0 }}</td></tr>{% endfor %}
+  </table>
+  {% endif %}
+
+  {% if reservations_par_statut %}
+  <div class="section">Réservations par statut</div>
+  <table class="grid">
+    <tr><th style="width:70%;">Statut</th><th class="right">Nombre</th></tr>
+    {% for r in reservations_par_statut %}<tr class="{% cycle 'odd' '' %}"><td>{{ r.statut_reser }}</td><td class="right">{{ r.nb }}</td></tr>{% endfor %}
+  </table>
+  {% endif %}
+
+  {% if paiements_par_methode %}
+  <div class="section">Paiements par méthode</div>
+  <table class="grid">
+    <tr><th style="width:50%;">Méthode</th><th class="right">Transactions</th><th class="right">Montant (FCFA)</th></tr>
+    {% for p in paiements_par_methode %}<tr class="{% cycle 'odd' '' %}"><td>{{ p.methode_paiement }}</td><td class="right">{{ p.nb }}</td><td class="right">{{ p.total|floatformat:0 }}</td></tr>{% endfor %}
+  </table>
+  {% endif %}
+
+  {% if top_clients %}
+  <div class="section">Top clients</div>
+  <table class="grid">
+    <tr><th style="width:50%;">Client</th><th class="right">Paiements</th><th class="right">Montant (FCFA)</th></tr>
+    {% for c in top_clients %}<tr class="{% cycle 'odd' '' %}"><td>{{ c.reservation__client__prenom }} {{ c.reservation__client__nom }}</td><td class="right">{{ c.nb_paiements }}</td><td class="right">{{ c.total|floatformat:0 }}</td></tr>{% endfor %}
+  </table>
+  {% endif %}
+
+  <br><br>
+  <table class="line-grey"><tr><td>&nbsp;</td></tr></table>
+  <table class="footer"><tr><td>HotelManagment — Rapport généré automatiquement</td><td class="right">Généré le {% now "d/m/Y à H:i" %}</td></tr></table>
+</body>
+</html>

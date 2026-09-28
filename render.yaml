@@ -1,0 +1,28 @@
+# Plan Render : l'application HotelManagment + sa base PostgreSQL.
+# Sur render.com : New > Blueprint > choisir le dépôt GitHub du projet.
+databases:
+  - name: hotelmanagment-db
+    plan: free
+    databaseName: hotelmanagment
+    user: hotelmanagment
+
+services:
+  - type: web
+    name: hotelmanagment
+    runtime: python
+    plan: free
+    buildCommand: bash build.sh
+    startCommand: gunicorn prohotel.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.2
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hotelmanagment-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: WEB_CONCURRENCY
+        value: 2

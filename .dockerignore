@@ -1,0 +1,26 @@
+# Ne jamais copier dans l'image : données locales, secrets, environnements
+.git/
+.gitlab-ci.yml
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+db.sqlite3
+*.sqlite3
+donnees.json
+dump.json
+.env
+*.env
+!.env.example
+media/
+staticfiles/
+logs/
+*.log
+.claude/
+.vscode/
+.idea/
+helm/
+prohotel-landing/
+DEPLOIEMENT*.md
+README.md

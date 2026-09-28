@@ -1,0 +1,6 @@
+{# Champs du service (format commun). Paramètre facultatif : s (service existant) #}
+<div class="form-grid">
+  <div class="field"><label>Nom du service <span class="req">*</span></label><input type="text" name="nom_service" class="input" placeholder="Ex: Petit-déjeuner, Blanchisserie..." value="{{ s.nom_service|default:'' }}" required></div>
+  <div class="field"><label>Prix (FCFA) <span class="req">*</span></label><input type="number" name="prix_service" class="input" placeholder="0" min="0" step="0.01" value="{{ s.prix_service|floatformat:'-2u'|default:'' }}" required></div>
+  <div class="field col-span-full"><label>Description</label><textarea name="description" rows="3" class="textarea" placeholder="Description du service">{{ s.description|default:'' }}</textarea></div>
+</div>

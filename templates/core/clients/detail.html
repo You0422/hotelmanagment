@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ client.prenom }} {{ client.nom }} · HotelManagment{% endblock %}
+{% block content %}
+<a href="{% url 'clients_list' %}" class="back-link">{% include "icons/arrow-left.html" with cls="icon-sm" %}Retour aux clients</a>
+
+<div class="client-card">
+  <div class="client-card-head" style="padding:1.5rem;">
+    <div class="truncate">
+      <p class="text-sm" style="opacity:.9;">Fiche client</p>
+      <h1 class="page-title" style="color:#fff;">{{ client.prenom }} {{ client.nom }}</h1>
+      <p class="client-card-email">{{ client.email|default:"Email non renseigné" }}</p>
+    </div>
+    <span class="client-card-code" style="font-size:1rem;">{{ client.code_client }}</span>
+  </div>
+  <div class="client-card-foot">
+    <a href="{% url 'client_pdf' client.pk %}" class="btn-soft btn-soft-green">{% include "icons/file-down.html" with cls="icon-sm" %}Télécharger PDF</a>
+    {% if is_admin %}
+    <a href="{% url 'client_update' client.pk %}" class="btn-soft btn-soft-blue">{% include "icons/edit.html" with cls="icon-sm" %}Modifier</a>
+    <a href="{% url 'client_delete' client.pk %}" class="btn-soft btn-soft-red">{% include "icons/trash.html" with cls="icon-sm" %}Supprimer</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="stack">
+    <div class="panel p-6">
+      <h2 class="form-section-title">Informations personnelles</h2>
+      <div class="kv">
+        <div class="kv-item"><p class="kv-label">Prénom</p><p class="kv-value">{{ client.prenom }}</p></div>
+        <div class="kv-item"><p class="kv-label">Nom</p><p class="kv-value">{{ client.nom }}</p></div>
+        <div class="kv-item"><p class="kv-label">Email</p><p class="kv-value">{% if client.email %}<a class="text-blue" href="mailto:{{ client.email }}">{{ client.email }}</a>{% else %}—{% endif %}</p></div>
+        <div class="kv-item"><p class="kv-label">Téléphone</p><p class="kv-value">{% if client.telephone %}<a class="text-blue" href="tel:{{ client.telephone }}">{{ client.telephone }}</a>{% else %}—{% endif %}</p></div>
+        <div class="kv-item col-span-full"><p class="kv-label">Adresse</p><p class="kv-value">{{ client.adresse|default:"—" }}</p></div>
+      </div>
+    </div>
+
+    <div class="panel p-6">
+      <h2 class="form-section-title">Période de séjour</h2>
+      <div class="kv">
+        <div class="note note-green"><p class="note-label">Date d'entrée</p><p class="note-value">{{ client.date_entree|date:"d/m/Y" }}</p></div>
+        <div class="note note-red"><p class="note-label">Date de sortie</p><p class="note-value">{{ client.date_sortie|date:"d/m/Y" }}</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="panel p-6">
+      <h2 class="form-section-title">Documents</h2>
+      <div class="note note-blue"><p class="note-label">{{ client.get_type_document_display }}</p><p class="note-value">{{ client.numero_document }}</p></div>
+    </div>
+    <div class="panel p-6">
+      <h2 class="form-section-title">Statut</h2>
+      {% with statut=client.statut_sejour %}<span class="badge {% if statut == 'Actif' %}badge-green{% elif statut == 'À venir' %}badge-yellow{% else %}badge-gray{% endif %}">{% if statut == 'Actif' %}✓ {% endif %}{{ statut }}</span>{% endwith %}
+      <div class="note note-gray mt-4"><p class="note-label">Client depuis</p><p class="note-value">{{ client.date_creation|date:"d/m/Y" }}</p></div>
+    </div>
+    <div class="panel p-6">
+      <h2 class="form-section-title">Actions rapides</h2>
+      <div class="form-stack">
+        <a href="{% url 'reservations_list' %}" class="btn btn-primary btn-block">{% include "icons/calendar.html" with cls="icon-sm" %}Nouvelle réservation</a>
+        <a href="{% url 'clients_list' %}" class="btn btn-outline btn-block">Liste des clients</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

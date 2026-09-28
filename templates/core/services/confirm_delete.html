@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Supprimer un service · HotelManagment{% endblock %}
+{% block content %}
+{% url 'services_list' as cancel_url %}
+{% include "core/partials/confirm_delete_page.html" with title="Supprimer le service « "|add:service.nom_service|add:" » ?" cancel_url=cancel_url %}
+{% endblock %}

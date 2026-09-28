@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Chambres · HotelManagment{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Gestion des chambres</h1>
+    <p class="page-subtitle">Gérez les chambres de votre établissement</p>
+  </div>
+  {% if is_admin %}
+  <button type="button" class="btn btn-primary btn-lg" data-modal-open="#roomModal">
+    {% include "icons/plus.html" with cls="icon" %}Ajouter une chambre
+  </button>
+  {% endif %}
+</div>
+
+<div class="panel p-4 stack-sm">
+  <div class="filter-bar">
+    <a href="?q={{ q|urlencode }}&type={{ type_filter|default:''|urlencode }}" class="pill {% if not status_filter %}is-active{% endif %}">Toutes</a>
+    <a href="?q={{ q|urlencode }}&type={{ type_filter|default:''|urlencode }}&status=Libre" class="pill pill-green {% if status_filter == 'Libre' %}is-active{% endif %}">Disponibles</a>
+    <a href="?q={{ q|urlencode }}&type={{ type_filter|default:''|urlencode }}&status=Occup%C3%A9e" class="pill pill-red {% if status_filter == 'Occupée' %}is-active{% endif %}">Occupées</a>
+    <a href="?q={{ q|urlencode }}&type={{ type_filter|default:''|urlencode }}&status=En%20maintenance" class="pill pill-yellow {% if status_filter == 'En maintenance' %}is-active{% endif %}">En maintenance</a>
+    <a href="?q={{ q|urlencode }}&type={{ type_filter|default:''|urlencode }}&status=Hors%20service" class="pill pill-gray {% if status_filter == 'Hors service' %}is-active{% endif %}">Hors service</a>
+  </div>
+  <form method="get" class="search-row">
+    <input type="hidden" name="status" value="{{ status_filter|default:'' }}">
+    <div class="search-box">
+      {% include "icons/search.html" with cls="icon" %}
+      <input type="text" name="q" value="{{ q }}" placeholder="Rechercher par numéro de chambre..." class="input">
+    </div>
+    <select name="type" class="select" style="max-width: 11rem;" onchange="this.form.submit()">
+      <option value="">Tous les types</option>
+      <option value="Simple" {% if type_filter == 'Simple' %}selected{% endif %}>Simple</option>
+      <option value="Double" {% if type_filter == 'Double' %}selected{% endif %}>Double</option>
+      <option value="Suite" {% if type_filter == 'Suite' %}selected{% endif %}>Suite</option>
+      <option value="Dortoir" {% if type_filter == 'Dortoir' %}selected{% endif %}>Dortoir</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Rechercher</button>
+  </form>
+</div>
+
+{% if rooms %}
+<div class="grid-3 gap-6">
+  {% for r in rooms %}
+  <div class="item-card">
+    <div class="item-card-head">
+      <div class="item-card-id">
+        <div class="item-card-icon is-blue">{% include "icons/bed.html" with cls="icon-lg" %}</div>
+        <div class="truncate">
+          <h3 class="item-card-title">Chambre {{ r.numero_chambre }}</h3>
+          <p class="item-card-sub">{{ r.type_chambre }}</p>
+        </div>
+      </div>
+      <span class="badge {% if r.statut_actuel == 'Libre' %}badge-green{% elif r.statut_actuel == 'Occupée' %}badge-red{% elif r.statut_actuel == 'En maintenance' %}badge-yellow{% else %}badge-gray{% endif %}">{% if r.statut_actuel == 'Libre' %}Disponible{% else %}{{ r.statut_actuel }}{% endif %}</span>
+    </div>
+    <div class="item-rows">
+      <div class="item-row is-total"><span>Prix par nuit :</span><span>{{ r.prix_nuit|intcomma }} FCFA</span></div>
+    </div>
+    {% if r.description %}<p class="item-desc">{{ r.description }}</p>{% endif %}
+    <div class="item-actions">
+      <button type="button" class="btn-soft btn-soft-purple" data-modal-open="#historyModal{{ r.pk }}">{% include "icons/clock.html" with cls="icon-sm" %}<span>Historique</span></button>
+      {% if is_admin %}
+      <button type="button" class="btn-soft btn-soft-blue" data-modal-open="#editModal{{ r.pk }}">{% include "icons/edit.html" with cls="icon-sm" %}<span>Modifier</span></button>
+      <button type="button" class="btn-soft btn-soft-red" data-modal-open="#deleteModal{{ r.pk }}">{% include "icons/trash.html" with cls="icon-sm" %}<span>Supprimer</span></button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="modal" id="historyModal{{ r.pk }}">
+    <div class="modal-panel is-lg">
+      {% include "core/partials/modal_head.html" with title="Historique — Chambre "|add:r.numero_chambre %}
+      {% with sejours=r.reservations.all|dictsortreversed:"date_arrivee" %}
+      <div class="history-summary">
+        <span class="badge badge-blue">{{ r.type_chambre }}</span>
+        <span class="text-sm text-muted">{{ r.prix_nuit|intcomma }} FCFA / nuit · Statut actuel : <strong>{{ r.statut_actuel }}</strong></span>
+        <span class="text-sm text-muted">{{ sejours|length }} séjour{{ sejours|length|pluralize }}</span>
+      </div>
+      {% if sejours %}
+      <div class="table-wrap history-table">
+        <table class="data-table">
+          <thead><tr><th>Client</th><th>Arrivée</th><th>Départ</th><th class="t-center">Nuits</th><th>Statut</th><th></th></tr></thead>
+          <tbody>
+            {% for s in sejours %}
+            <tr>
+              <td><div class="t-strong">{{ s.client.prenom }} {{ s.client.nom }}</div><div class="t-muted">{{ s.client.code_client }}{% if s.client.telephone %} · {{ s.client.telephone }}{% endif %}</div></td>
+              <td class="nowrap">{{ s.date_arrivee|date:"d/m/Y" }}</td>
+              <td class="nowrap">{{ s.date_depart|date:"d/m/Y" }}</td>
+              <td class="t-center">{{ s.nb_nuits }}</td>
+              <td>{% include "core/partials/reservation_badge.html" with statut=s.statut_reser %}</td>
+              <td><a href="{% url 'reservation_detail' s.pk %}" class="icon-btn icon-btn-blue" title="Voir la réservation">{% include "icons/eye.html" with cls="icon-sm" %}</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty">{% include "icons/clock.html" with cls="icon-empty" %}<h3>Aucun séjour</h3><p>Cette chambre n'a encore jamais été occupée</p></div>
+      {% endif %}
+      {% endwith %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Fermer</button>
+        {% if is_admin %}<button type="button" class="btn btn-primary" data-modal-open="#editModal{{ r.pk }}" data-modal-swap>Modifier la chambre</button>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if is_admin %}
+  <div class="modal" id="editModal{{ r.pk }}">
+    <div class="modal-panel is-lg">
+      {% include "core/partials/modal_head.html" with title="Modifier la chambre" %}
+      <form method="post" action="{% url 'room_update' r.pk %}" class="form-body">
+        {% csrf_token %}
+        {% include "core/chambres/_fields.html" %}
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% url 'room_delete' r.pk as delete_url %}
+  {% with pk_s=r.pk|stringformat:"s" %}
+  {% include "core/partials/confirm_delete_modal.html" with modal_id="deleteModal"|add:pk_s action=delete_url title="Supprimer la chambre "|add:r.numero_chambre|add:" ?" %}
+  {% endwith %}
+  {% endif %}
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel empty">
+  {% include "icons/hotel.html" with cls="icon-empty" %}
+  <h3>Aucune chambre</h3>
+  <p>{% if q or type_filter or status_filter %}Aucune chambre ne correspond à vos filtres{% else %}Commencez par ajouter votre première chambre{% endif %}</p>
+</div>
+{% endif %}
+
+{% if is_admin %}
+<div class="modal" id="roomModal">
+  <div class="modal-panel is-lg">
+    {% include "core/partials/modal_head.html" with title="Ajouter une chambre" %}
+    <form method="post" action="{% url 'room_create' %}" class="form-body">
+      {% csrf_token %}
+      {% include "core/chambres/_fields.html" with r=None %}
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" data-modal-close>Annuler</button>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
