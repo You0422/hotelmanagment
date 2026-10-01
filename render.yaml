@@ -1,8 +1,5 @@
 # Plan Render : l'application HotelManagment + sa base PostgreSQL.
 # Sur render.com : New > Blueprint > choisir le dépôt GitHub du projet.
-#
-# Construction avec le Dockerfile : les PDF (xhtml2pdf > svglib > pycairo) ont besoin
-# de bibliothèques système que l'environnement Python de Render ne fournit pas.
 databases:
   - name: hotelmanagment-db
     plan: free
@@ -12,11 +9,15 @@ databases:
 services:
   - type: web
     name: hotelmanagment
-    runtime: docker
+    runtime: python
     plan: free
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    # build.sh : dépendances, fichiers CSS/JS, mise à jour de la base
+    buildCommand: bash build.sh
+    startCommand: gunicorn prohotel.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --access-logfile -
     envVars:
+      # Python 3.14 n'a pas encore de paquet prêt pour python-bidi (PDF)
+      - key: PYTHON_VERSION
+        value: 3.12.8
       - key: DATABASE_URL
         fromDatabase:
           name: hotelmanagment-db
