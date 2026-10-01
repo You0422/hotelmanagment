@@ -1,4 +1,4 @@
-# Image de base Python
+# Image de base Python (3.12 : toutes les dépendances PDF ont des paquets prêts)
 FROM python:3.12-slim
 
 # Variables d'environnement
