@@ -48,9 +48,17 @@ docker run --rm python:3.12-slim python -c "import secrets; print(secrets.token_
 
 ## 4. Démarrer
 
+Avec une base externe (Neon, Supabase), celle de `DATABASE_URL` :
+
 ```
 docker compose up -d --build
 docker compose logs -f
+```
+
+Pour héberger aussi PostgreSQL sur le serveur (remplissez alors `POSTGRES_*` dans `.env`) :
+
+```
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
 ```
 
 Le premier démarrage prend plusieurs minutes (construction de l'image). L'application crée les tables toute seule, puis Caddy obtient le certificat HTTPS.

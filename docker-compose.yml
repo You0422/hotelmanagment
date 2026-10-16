@@ -1,28 +1,15 @@
-# HotelManagment sur un VPS (Systalink, OVH, Hostinger...) : application + PostgreSQL + HTTPS
-# Démarrage : docker compose up -d --build   (les réglages viennent du fichier .env)
+# HotelManagment sur un VPS : application + HTTPS automatique.
+# La base est celle indiquée par DATABASE_URL dans le fichier .env (Neon, Supabase...).
+#
+#   docker compose up -d --build
+#
+# Pour héberger aussi PostgreSQL sur le serveur, ajoutez le second fichier :
+#   docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d --build
 
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   web:
     build: .
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
       DJANGO_DEBUG: "False"
@@ -31,12 +18,8 @@ services:
       DJANGO_USE_X_FORWARDED: "True"
       DJANGO_SECURE_COOKIES: "True"
       DJANGO_MEDIA_ROOT: /app/media
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      DB_SSL_REQUIRE: "False"
-    command: >-
-      sh -c "python manage.py migrate --no-input &&
-      python manage.py collectstatic --no-input &&
-      gunicorn prohotel.wsgi:application --bind 0.0.0.0:8080 --workers 3 --timeout 120 --access-logfile -"
+      DATABASE_URL: ${DATABASE_URL}
+      DB_SSL_REQUIRE: ${DB_SSL_REQUIRE:-True}
     volumes:
       - media_data:/app/media
     expose:
@@ -60,7 +43,6 @@ services:
       - caddy_config:/config
 
 volumes:
-  db_data:
   media_data:
   caddy_data:
   caddy_config:

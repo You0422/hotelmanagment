@@ -26,8 +26,9 @@ SECRET_KEY = os.environ.get(
     'django-insecure-0o(*=c8^&ezy_x(-ej#mr19pcwww8x200rq8!tyl$z0a=6#hwd',
 )
 
-# Prod : DJANGO_DEBUG=0 ou false
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
+# Prod : DJANGO_DEBUG=0 ou false (désactivé par défaut sur Vercel)
+SUR_VERCEL = bool(os.environ.get('VERCEL'))
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False' if SUR_VERCEL else 'True').lower() in ('1', 'true', 'yes')
 
 # Prod IIS : DJANGO_ALLOWED_HOSTS=mondomaine.com,www.mondomaine.com,IP_SERVEUR
 _hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', '').strip()
@@ -38,14 +39,27 @@ ALLOWED_HOSTS = [h.strip() for h in _hosts.split(',') if h.strip()] if _hosts el
 _csrf_origins = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').strip()
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_origins.split(',') if o.strip()]
 
-# Render et Railway fournissent automatiquement l'adresse publique du service
-_hote_plateforme = os.environ.get('RENDER_EXTERNAL_HOSTNAME') or os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+# Render, Railway et Koyeb fournissent automatiquement l'adresse publique du service
+_hote_plateforme = (os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+                    or os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+                    or os.environ.get('KOYEB_PUBLIC_DOMAIN'))
 if _hote_plateforme:
     if ALLOWED_HOSTS != ['*'] and _hote_plateforme not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(_hote_plateforme)
     CSRF_TRUSTED_ORIGINS.append(f'https://{_hote_plateforme}')
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+# Vercel : toujours en HTTPS, adresses du déploiement et du site en production
+if SUR_VERCEL:
+    for _hote in {os.environ.get('VERCEL_URL'), os.environ.get('VERCEL_BRANCH_URL'),
+                  os.environ.get('VERCEL_PROJECT_PRODUCTION_URL')} - {None, ''}:
+        if ALLOWED_HOSTS != ['*'] and _hote not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_hote)
+        CSRF_TRUSTED_ORIGINS.append(f'https://{_hote}')
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
@@ -215,4 +229,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Media (fichiers téléchargés par les utilisateurs : logos, justificatifs)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = Path(os.environ.get('DJANGO_MEDIA_ROOT', BASE_DIR / 'media'))
+# Sur Vercel, seul /tmp est inscriptible : les fichiers y sont perdus au redémarrage
+MEDIA_ROOT = Path(os.environ.get('DJANGO_MEDIA_ROOT', '/tmp/media' if SUR_VERCEL else BASE_DIR / 'media'))

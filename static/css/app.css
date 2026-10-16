@@ -771,22 +771,23 @@ button.cal-event { width: 100%; text-align: left; cursor: pointer; }
 .client-card-foot .btn-soft { padding: .3125rem .625rem; font-size: .8125rem; flex: 1; justify-content: center; }
 
 /* ---------- Page « Enregistrer votre hôtel » ---------- */
-.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: var(--gray-100); }
+.auth-page { --auth-ink: #1f3d33; --auth-ink-2: #2b5345; --auth-brass: #d8c49a; --auth-muted: #b5c3ba; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: #f1efe9; }
 .auth-split { display: grid; grid-template-columns: 1fr; width: 100%; max-width: 62rem; background: #fff; border-radius: 1rem; box-shadow: var(--shadow-xl); overflow: hidden; }
 @media (min-width: 900px) { .auth-split { grid-template-columns: 22rem 1fr; } }
 
-.auth-aside { display: none; background: linear-gradient(160deg, #1e3a8a, #0f172a); color: #fff; padding: 2rem 1.75rem; }
+.auth-aside { display: none; background: var(--auth-ink); color: #f6f3ec; padding: 2rem 1.75rem; }
 @media (min-width: 900px) { .auth-aside { display: block; } }
+.auth-brand svg { color: var(--auth-brass); }
 .auth-brand { display: flex; align-items: center; gap: .625rem; font-size: 1.125rem; font-weight: 700; margin-bottom: 2rem; }
 .auth-aside h2 { font-size: 1.375rem; line-height: 1.8rem; font-weight: 700; }
-.auth-aside-lead { color: #c7d2fe; font-size: .875rem; margin-top: .5rem; }
+.auth-aside-lead { color: var(--auth-muted); font-size: .875rem; margin-top: .5rem; }
 .auth-aside-list { list-style: none; margin: 1.75rem 0 0; padding: 0; }
 .auth-aside-list li { display: flex; gap: .75rem; align-items: flex-start; font-size: .875rem; }
 .auth-aside-list li + li { margin-top: 1.125rem; }
-.auth-aside-list svg { color: #93c5fd; margin-top: .2rem; flex-shrink: 0; }
+.auth-aside-list svg { color: var(--auth-brass); margin-top: .2rem; flex-shrink: 0; }
 .auth-aside-list strong { display: block; font-weight: 600; }
-.auth-aside-list span { color: #a5b4fc; font-size: .8125rem; }
-.auth-aside-foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgb(255 255 255 / .15); font-size: .75rem; color: #a5b4fc; }
+.auth-aside-list span { color: var(--auth-muted); font-size: .8125rem; }
+.auth-aside-foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgb(216 196 154 / .3); font-size: .75rem; color: var(--auth-muted); }
 
 .auth-main { padding: 2rem 1.5rem; }
 @media (min-width: 640px) { .auth-main { padding: 2.5rem; } }
@@ -830,3 +831,14 @@ button.cal-event { width: 100%; text-align: left; cursor: pointer; }
 @media (min-width: 900px) { .auth-logo-mobile { display: none; } }
 @media (max-width: 899.98px) { .auth-main-head { text-align: center; } }
 .auth-copy { text-align: center; font-size: .75rem; color: var(--gray-500); margin-top: .5rem; }
+
+/* Pages connexion / inscription : vert bouteille et laiton au lieu du bleu */
+.auth-page .btn-primary { background: var(--auth-ink-2); }
+.auth-page .btn-primary:hover { background: var(--auth-ink); }
+.auth-page .btn-primary:disabled { background: var(--gray-400); }
+.auth-page .link-more { color: var(--auth-ink-2); }
+.auth-page .link-more:hover { color: var(--auth-ink); }
+.auth-page .input:focus, .auth-page .select:focus, .auth-page .textarea:focus { box-shadow: 0 0 0 2px var(--auth-ink-2); }
+.auth-page .login-logo { background: var(--auth-ink); color: var(--auth-brass); }
+.auth-page .step.is-current { color: var(--auth-ink); border-top-color: var(--auth-ink-2); }
+.auth-page .step.is-current .step-num { background: var(--auth-ink-2); }
