@@ -197,6 +197,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'fr'
 
+# Formats de date jj/mm/aaaa (prohotel/formats/fr/formats.py)
+FORMAT_MODULE_PATH = ['prohotel.formats']
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True

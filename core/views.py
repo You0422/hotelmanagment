@@ -1359,6 +1359,8 @@ def _get_report_data(request):
     return {
         'date_debut': date_debut,
         'date_fin': date_fin,
+        'periode_debut': d_debut,
+        'periode_fin': d_fin,
         'taux_occupation': taux_occupation,
         'total_recettes': recettes,
         'total_depenses': depenses_total,
@@ -1437,7 +1439,7 @@ def report_export_excel(request):
 
     # Titre
     ws.merge_cells('A1:B1')
-    ws['A1'] = f"Rapport Financier — {data['date_debut']} au {data['date_fin']}"
+    ws['A1'] = f"Rapport Financier — {data['periode_debut']:%d/%m/%Y} au {data['periode_fin']:%d/%m/%Y}"
     ws['A1'].font = Font(bold=True, size=14, color="6366F1")
 
     # KPIs

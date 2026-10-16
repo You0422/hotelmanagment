@@ -98,8 +98,8 @@ class ReservationForm(forms.ModelForm):
         model = Reservation
         fields = ['client', 'chambre', 'date_arrivee', 'date_depart', 'statut_reser']
         widgets = {
-            'date_arrivee': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'date_depart': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_arrivee': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
+            'date_depart': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
         }
 
     #  Validations
@@ -159,11 +159,11 @@ class ClientForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Numéro du document'
             }),
-            'date_entree': forms.DateInput(attrs={
+            'date_entree': forms.DateInput(format='%Y-%m-%d', attrs={
                 'type': 'date',
                 'class': 'form-control',
             }),
-            'date_sortie': forms.DateInput(attrs={
+            'date_sortie': forms.DateInput(format='%Y-%m-%d', attrs={
                 'type': 'date',
                 'class': 'form-control',
             }),
@@ -188,7 +188,7 @@ class PaymentForm(forms.ModelForm):
         model = Payment
         fields = ['montant_paye', 'methode_paiement', 'reference_paiement']
         widgets = {
-            'date_paiement': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_paiement': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
         }
 
     #  Validations
@@ -210,7 +210,7 @@ class ExpenseForm(forms.ModelForm):
         model = Expense
         fields = ['categorie', 'autre_categorie', 'montant', 'date_depense', 'description', 'justificatif']
         widgets = {
-            'date_depense': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date_depense': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'form-control'}),
             'justificatif': forms.ClearableFileInput(attrs={
                 'accept': 'image/*,.pdf',
                 'class': 'form-control'

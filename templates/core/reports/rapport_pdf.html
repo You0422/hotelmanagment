@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>Rapport financier {{ date_debut }} - {{ date_fin }}</title>
+  <title>Rapport financier {{ periode_debut|date:"d/m/Y" }} - {{ periode_fin|date:"d/m/Y" }}</title>
   <style>
     @page { size: A4; margin: 12mm 14mm; }
     body { font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; line-height: 1.1; color: #1e293b; }
@@ -32,7 +32,7 @@
 </head>
 <body>
   <div class="center title">RAPPORT FINANCIER</div>
-  <div class="center sub">Période : {{ date_debut }} au {{ date_fin }}</div>
+  <div class="center sub">Période : {{ periode_debut|date:"d/m/Y" }} au {{ periode_fin|date:"d/m/Y" }}</div>
   <br>
   <table class="line-blue"><tr><td>&nbsp;</td></tr></table>
 
